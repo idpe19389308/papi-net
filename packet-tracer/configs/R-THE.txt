@@ -1,0 +1,132 @@
+! ============================================================
+! R-THE — Δρομολογητής Θεσσαλονίκης
+! LAN base : 200.1.80.0/24  (3 VLANs /26)
+! WAN-1    : 200.1.70.0/30  προς R-IOA  (IOA .1, THE .2)
+! WAN-2    : 200.1.90.0/30  προς R-ATH  (THE .1, ATH .2)
+! Router-ID OSPF : 2.2.2.2
+! ============================================================
+enable
+configure terminal
+!
+hostname R-THE
+no ip domain-lookup
+enable secret class
+!
+! --- Φυσικό LAN interface ως trunk προς το SW-THE ---
+interface GigabitEthernet0/0/0
+ description Trunk to SW-THE
+ no shutdown
+!
+! --- Inter-VLAN routing sub-interfaces ---
+interface GigabitEthernet0/0/0.10
+ description VLAN10 Logistirio
+ encapsulation dot1Q 10
+ ip address 200.1.80.1 255.255.255.192
+!
+interface GigabitEthernet0/0/0.20
+ description VLAN20 Diefthynsi
+ encapsulation dot1Q 20
+ ip address 200.1.80.65 255.255.255.192
+!
+interface GigabitEthernet0/0/0.30
+ description VLAN30 SoftwareDevelopers
+ encapsulation dot1Q 30
+ ip address 200.1.80.129 255.255.255.192
+!
+! --- WAN προς Ιωάννινα ---
+interface GigabitEthernet0/0/1
+ description WAN to R-IOA
+ ip address 200.1.70.2 255.255.255.252
+ no shutdown
+!
+! --- WAN προς Αθήνα ---
+interface GigabitEthernet0/0/2
+ description WAN to R-ATH
+ ip address 200.1.90.1 255.255.255.252
+ no shutdown
+!
+! --- OSPF area 0 ---
+router ospf 1
+ router-id 2.2.2.2
+ network 200.1.80.0   0.0.0.63  area 0
+ network 200.1.80.64  0.0.0.63  area 0
+ network 200.1.80.128 0.0.0.63  area 0
+ network 200.1.70.0   0.0.0.3   area 0
+ network 200.1.90.0   0.0.0.3   area 0
+ passive-interface GigabitEthernet0/0/0.10
+ passive-interface GigabitEthernet0/0/0.20
+ passive-interface GigabitEthernet0/0/0.30
+!
+!
+! ============================================================
+! ACLs απομόνωσης τμημάτων (Θεσσαλονίκη)
+! Κανόνας: κάθε VLAN επιτρέπεται να επικοινωνεί ΜΟΝΟ με το
+! ίδιο VLAN σε άλλα παραρτήματα. Cross-department blocked.
+! ============================================================
+!
+! --- ACL 110: από VLAN 10 (Λογιστήριο) ---
+! Source: 200.1.80.0/26 (local Θεσσαλονίκη VLAN10)
+! deny → VLAN20 (Διεύθυνση) σε όλα τα παραρτήματα
+access-list 110 deny   ip 200.1.80.0 0.0.0.63 200.1.10.64 0.0.0.63
+access-list 110 deny   ip 200.1.80.0 0.0.0.63 200.1.40.64 0.0.0.63
+access-list 110 deny   ip 200.1.80.0 0.0.0.63 200.1.60.64 0.0.0.63
+access-list 110 deny   ip 200.1.80.0 0.0.0.63 200.1.80.64 0.0.0.63
+access-list 110 deny   ip 200.1.80.0 0.0.0.63 200.1.100.64 0.0.0.63
+! deny → VLAN30 (Software Developers) σε όλα τα παραρτήματα
+access-list 110 deny   ip 200.1.80.0 0.0.0.63 200.1.10.128 0.0.0.63
+access-list 110 deny   ip 200.1.80.0 0.0.0.63 200.1.40.128 0.0.0.63
+access-list 110 deny   ip 200.1.80.0 0.0.0.63 200.1.60.128 0.0.0.63
+access-list 110 deny   ip 200.1.80.0 0.0.0.63 200.1.80.128 0.0.0.63
+access-list 110 deny   ip 200.1.80.0 0.0.0.63 200.1.100.128 0.0.0.63
+access-list 110 permit ip any any
+!
+! --- ACL 120: από VLAN 20 (Διεύθυνση) ---
+! Source: 200.1.80.64/26 (local Θεσσαλονίκη VLAN20)
+! deny → VLAN10 (Λογιστήριο) σε όλα τα παραρτήματα
+access-list 120 deny   ip 200.1.80.64 0.0.0.63 200.1.10.0 0.0.0.63
+access-list 120 deny   ip 200.1.80.64 0.0.0.63 200.1.40.0 0.0.0.63
+access-list 120 deny   ip 200.1.80.64 0.0.0.63 200.1.60.0 0.0.0.63
+access-list 120 deny   ip 200.1.80.64 0.0.0.63 200.1.80.0 0.0.0.63
+access-list 120 deny   ip 200.1.80.64 0.0.0.63 200.1.100.0 0.0.0.63
+! deny → VLAN30 (Software Developers) σε όλα τα παραρτήματα
+access-list 120 deny   ip 200.1.80.64 0.0.0.63 200.1.10.128 0.0.0.63
+access-list 120 deny   ip 200.1.80.64 0.0.0.63 200.1.40.128 0.0.0.63
+access-list 120 deny   ip 200.1.80.64 0.0.0.63 200.1.60.128 0.0.0.63
+access-list 120 deny   ip 200.1.80.64 0.0.0.63 200.1.80.128 0.0.0.63
+access-list 120 deny   ip 200.1.80.64 0.0.0.63 200.1.100.128 0.0.0.63
+access-list 120 permit ip any any
+!
+! --- ACL 130: από VLAN 30 (Software Developers) ---
+! Source: 200.1.80.128/26 (local Θεσσαλονίκη VLAN30)
+! deny → VLAN10 (Λογιστήριο) σε όλα τα παραρτήματα
+access-list 130 deny   ip 200.1.80.128 0.0.0.63 200.1.10.0 0.0.0.63
+access-list 130 deny   ip 200.1.80.128 0.0.0.63 200.1.40.0 0.0.0.63
+access-list 130 deny   ip 200.1.80.128 0.0.0.63 200.1.60.0 0.0.0.63
+access-list 130 deny   ip 200.1.80.128 0.0.0.63 200.1.80.0 0.0.0.63
+access-list 130 deny   ip 200.1.80.128 0.0.0.63 200.1.100.0 0.0.0.63
+! deny → VLAN20 (Διεύθυνση) σε όλα τα παραρτήματα
+access-list 130 deny   ip 200.1.80.128 0.0.0.63 200.1.10.64 0.0.0.63
+access-list 130 deny   ip 200.1.80.128 0.0.0.63 200.1.40.64 0.0.0.63
+access-list 130 deny   ip 200.1.80.128 0.0.0.63 200.1.60.64 0.0.0.63
+access-list 130 deny   ip 200.1.80.128 0.0.0.63 200.1.80.64 0.0.0.63
+access-list 130 deny   ip 200.1.80.128 0.0.0.63 200.1.100.64 0.0.0.63
+access-list 130 permit ip any any
+!
+! --- Εφαρμογή ACLs inbound σε κάθε VLAN subinterface ---
+interface GigabitEthernet0/0/0.10
+ ip access-group 110 in
+interface GigabitEthernet0/0/0.20
+ ip access-group 120 in
+interface GigabitEthernet0/0/0.30
+ ip access-group 130 in
+!
+line con 0
+ password cisco
+ login
+line vty 0 4
+ password cisco
+ login
+!
+end
+!
+! copy running-config startup-config

@@ -1,0 +1,47 @@
+# OCR / AI artefacts (Gemini, Tesseract, etc.)
+*.ocr.gemini.txt
+*.ocr.*.txt
+*.gemini.txt
+
+# Editor / OS junk
+.DS_Store
+Thumbs.db
+*~
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Backups & sidecar notes (added during v2 corrections)
+*.bak-*
+.*.bak-*
+*.old-*
+.*.old-*
+*.NEEDS-REGEN.txt
+
+# HTML siblings of source files — source code (.php/.sql/.txt) renders better
+# on the GitHub source viewer with syntax highlighting. Don't re-introduce
+# rendered HTML duplicates of source files.
+webapp/public/*.html
+webapp/includes/*.html
+webapp/sql/*.html
+webapp/public/assets/*.html
+webapp/docs/er-diagram.html
+packet-tracer/configs/R-*.html
+packet-tracer/configs/SW-*.html
+# Exception: keep README.html and index.html (folder landings, not source siblings)
+!**/README.html
+!**/index.html
+
+# PHP runtime
+*.log
+config.local.php
+
+# Local credentials (never commit)
+.env
+.env.local
+includes/secrets.php
+
+# Test artefacts
+*.tmp
+nbproject/

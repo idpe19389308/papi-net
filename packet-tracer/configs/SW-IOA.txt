@@ -1,0 +1,65 @@
+! ============================================================
+! SW-IOA — Switch (Cisco 2960-24TT)
+! VLANs: 10 Λογιστήριο, 20 Διεύθυνση, 30 SoftwareDevelopers
+! Trunk προς R-IOA στο Fa0/24 (matches physical cable)
+! ============================================================
+enable
+configure terminal
+hostname SW-IOA
+enable secret class
+!
+! VLAN creation
+vlan 10
+ name LOGISTIRIO
+vlan 20
+ name DIEFTHYNSI
+vlan 30
+ name SWDEV
+!
+! PC ports (one per VLAN, matching cable wiring)
+interface FastEthernet0/1
+ description PC-IOA-Λογιστήριο
+ switchport mode access
+ switchport access vlan 10
+ no shutdown
+!
+interface FastEthernet0/2
+ description PC-IOA-Διεύθυνση
+ switchport mode access
+ switchport access vlan 20
+ no shutdown
+!
+interface FastEthernet0/3
+ description PC-IOA-Developers
+ switchport mode access
+ switchport access vlan 30
+ no shutdown
+!
+interface FastEthernet0/4
+ description WebServer
+ switchport mode access
+ switchport access vlan 10
+ no shutdown
+!
+interface FastEthernet0/5
+ description FileServer
+ switchport mode access
+ switchport access vlan 10
+ no shutdown
+!
+! Trunk προς router
+interface FastEthernet0/24
+ description trunk to R-IOA
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,30
+ no shutdown
+!
+line con 0
+ password cisco
+ login
+line vty 0 4
+ password cisco
+ login
+!
+end
+copy running-config startup-config
