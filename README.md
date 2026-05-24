@@ -64,7 +64,6 @@
 | Τεχνική αναφορά (Markdown) | [`final-report/report.md`](final-report/report.md) |
 | Τεχνική αναφορά (HTML) | [`final-report/report.html`](https://idpe19389308.github.io/papi-net/final-report/report.html) |
 | Διαδραστικά διαγράμματα (αρχιτεκτονική, ER, τοπολογία, VLAN) | [διαδραστική προβολή](https://idpe19389308.github.io/papi-net/final-report/interactive/) |
-| Παρουσίαση (PowerPoint) | [`presentation/papinet-presentation.pptx`](presentation/papinet-presentation.pptx) |
 | Προεπισκόπηση παρουσίασης (PDF) | [`final-report/papinet-preview.pdf`](final-report/papinet-preview.pdf) |
 | Κεντρική σελίδα | [idpe19389308.github.io/papi-net/](https://idpe19389308.github.io/papi-net/) |
 
