@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<title>ER Διάγραμμα — Σύστημα Διαχείρισης Παραγγελιών</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; font-family: -apple-system, "Segoe UI", Roboto, sans-serif; }
+  body { background: #1a1a2e; color: #e8eaf2; display: flex; flex-direction: column; overflow: hidden; }
+  header { background: #0f1626; padding: 14px 22px; border-bottom: 1px solid #2a3654; }
+  header h1 { font-size: 18px; font-weight: 600; color: #ffd479; }
+  header .sub { font-size: 12px; color: #8a95b8; margin-top: 3px; }
+  main { flex: 1; display: flex; min-height: 0; }
+  #stage { flex: 1; background: #f5f7fa; position: relative; overflow: hidden; cursor: grab; }
+  #stage.dragging { cursor: grabbing; }
+  #stage svg { width: 100%; height: 100%; display: block; }
+  aside { width: 320px; background: #16213e; border-left: 1px solid #2a3654; padding: 18px; overflow-y: auto; }
+  aside h2 { font-size: 15px; color: #ffd479; margin-bottom: 10px; border-bottom: 1px solid #2a3654; padding-bottom: 6px; }
+  aside .desc { font-size: 13px; line-height: 1.55; color: #cdd4ea; margin-bottom: 14px; }
+  aside .props { font-size: 12px; }
+  aside .props .row { display: flex; padding: 5px 0; border-bottom: 1px dotted #2a3654; }
+  aside .props .k { color: #8a95b8; min-width: 110px; font-weight: 600; }
+  aside .props .v { color: #e8eaf2; flex: 1; }
+  aside .hint { font-size: 11px; color: #6a7596; margin-top: 14px; font-style: italic; }
+  .node { cursor: pointer; transition: filter 0.15s; }
+  .node:hover { filter: brightness(1.04) drop-shadow(0 2px 4px rgba(0,0,0,0.18)); }
+  .node.selected rect.outline { stroke: #ffd479; stroke-width: 3; }
+  .field { cursor: pointer; }
+  .field rect.fbg { fill: transparent; }       /* default — was missing, SVG fell back to black and hid the text */
+  .field:hover rect.fbg { fill: rgba(0,0,0,0.06); }
+  .field.selected rect.fbg { fill: rgba(255,212,121,0.35); stroke: #c89a2e; stroke-width: 1; }
+  .arrow { cursor: pointer; }
+  .arrow:hover path { stroke: #c89a2e; stroke-width: 3; }
+  .arrow.selected path { stroke: #ffd479; stroke-width: 3.5; }
+  .arrow.selected .badge { fill: #ffd479; }
+  .nt { font-family: "Menlo","Consolas",monospace; font-size: 14px; font-weight: 700; fill: #fff; }
+  .ns { font-family: "Menlo","Consolas",monospace; font-size: 11px; fill: #fff; opacity: 0.8; }
+  .at { font-family: "Menlo","Consolas",monospace; font-size: 12px; fill: #1a1a2e; }
+  .badge-pk { fill: #c83c3c; }
+  .badge-fk { fill: #2a7a32; }
+  .badge-u  { fill: #a36a0d; }
+  .badge-txt { font-family: "Menlo","Consolas",monospace; font-size: 9px; font-weight: 700; fill: #fff; }
+  .arr-label-bg { fill: #fff; stroke: #2a3654; stroke-width: 1; }
+  .arr-label-tx { font-family: -apple-system, sans-serif; font-size: 10px; fill: #1a1a2e; font-weight: 600; }
+  text { pointer-events: none; }
+  .field rect.fbg { pointer-events: all; }
+  .node rect.outline { pointer-events: all; }
+</style>
+</head>
+<body>
+<nav class="topnav" style="padding:8px 24px;background:#f7f9fc;border-bottom:1px solid #ccc;font-size:13px;display:flex;gap:18px;">
+  <a href="index.html" style="color:#1a4f8a;text-decoration:none;">⬅ Interactive Diagrams</a>
+  <a href="../report.html" style="color:#1a4f8a;text-decoration:none;">📄 Αναφορά</a>
+  <a href="https://github.com/idpe19389308/papi-net" style="color:#1a4f8a;text-decoration:none;">🐙 GitHub</a>
+</nav>
+<header>
+  <h1>ER Διάγραμμα — Σύστημα Διαχείρισης Παραγγελιών</h1>
+  <div class="sub">4 πίνακες · 3 σχέσεις foreign key · κάντε κλικ για λεπτομέρειες · σύρετε για μετακίνηση</div>
+</header>
+<main>
+  <div id="stage">
+    <svg id="svg" viewBox="0 0 1400 810" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="#444"/>
+        </marker>
+        <marker id="onenotch" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto">
+          <line x1="2" y1="0" x2="2" y2="10" stroke="#444" stroke-width="2"/>
+          <line x1="6" y1="0" x2="6" y2="10" stroke="#444" stroke-width="2"/>
+        </marker>
+        <!-- Crow-foot marker (the "Ν / many" side): three prongs fanning out -->
+        <marker id="crowfoot" viewBox="0 0 12 12" refX="1" refY="6" markerWidth="12" markerHeight="12" orient="auto">
+          <path d="M11,1 L1,6 M11,6 L1,6 M11,11 L1,6" fill="none" stroke="#444" stroke-width="1.6"/>
+        </marker>
+      </defs>
+
+      <g id="world">
+
+        <!-- ============== ARROWS (drawn first, behind nodes) ============== -->
+
+        <!-- New layout:
+             clients     (80, 140)   w=300 h=208   right edge=380, bottom=348
+             orders      (480, 220)  w=300 h=158   left=480 right=780, bottom=378
+             products    (1010, 200) w=300 h=182   left=1010 right=1310, bottom=382
+             order_items (480, 460)  w=300 h=182   left=480 right=780, bottom=642
+             Field y midlines: header(40)+row*24+12 inside table -->
+
+        <!-- FK1: orders.client_id (480, 306) -> clients.id (380, 202).
+             Label sits in clear space BETWEEN the tables (x 380..480). -->
+        <g class="arrow" data-key="FK1">
+          <path d="M 480 306 C 440 306, 420 220, 380 202"
+                fill="none" stroke="#444" stroke-width="2"
+                marker-end="url(#onenotch)" marker-start="url(#crowfoot)"/>
+          <g transform="translate(430, 254)">
+            <rect class="arr-label-bg badge" x="-48" y="-10" width="96" height="18" rx="3"/>
+            <text class="arr-label-tx" x="0" y="3" text-anchor="middle">FK1: Ν—1 CASCADE</text>
+          </g>
+        </g>
+
+        <!-- FK2: order_items.order_id (480, 546) -> orders.id (480, 282).
+             Loops out to the LEFT of both tables to avoid passing through them. -->
+        <g class="arrow" data-key="FK2">
+          <path d="M 480 546 C 380 540, 380 290, 480 282"
+                fill="none" stroke="#444" stroke-width="2"
+                marker-end="url(#onenotch)" marker-start="url(#crowfoot)"/>
+          <g transform="translate(370, 414)">
+            <rect class="arr-label-bg badge" x="-55" y="-10" width="110" height="18" rx="3"/>
+            <text class="arr-label-tx" x="0" y="3" text-anchor="middle">FK2: Ν—1 CASCADE</text>
+          </g>
+        </g>
+
+        <!-- FK3: order_items.product_id (780, 570) -> products.id (1010, 262).
+             Diagonal sweep through clear space below products. -->
+        <g class="arrow" data-key="FK3">
+          <path d="M 780 570 C 900 570, 980 350, 1010 262"
+                fill="none" stroke="#444" stroke-width="2"
+                marker-end="url(#onenotch)" marker-start="url(#crowfoot)"/>
+          <g transform="translate(900, 470)">
+            <rect class="arr-label-bg badge" x="-80" y="-10" width="160" height="18" rx="3"/>
+            <text class="arr-label-tx" x="0" y="3" text-anchor="middle">FK3: Ν—1 RESTRICT (ιστορικό)</text>
+          </g>
+        </g>
+
+        <!-- ============== TABLE: clients ============== -->
+        <g class="node" data-key="T-clients" transform="translate(80,140)">
+          <rect class="outline" x="0" y="0" width="300" height="208" rx="6" fill="#e8f0f8" stroke="#1a4f8a" stroke-width="1.5"/>
+          <rect x="0" y="0" width="300" height="40" rx="6" fill="#1a4f8a"/>
+          <rect x="0" y="34" width="300" height="6" fill="#1a4f8a"/>
+          <text class="nt" x="14" y="26">clients</text>
+          <text class="ns" x="290" y="26" text-anchor="end">πελάτες</text>
+
+          <!-- field rows -->
+          <g class="field" data-key="F-clients-id" transform="translate(0,50)">
+            <rect class="fbg" x="2" y="0" width="296" height="24"/>
+            <rect class="badge-pk" x="8" y="5" width="22" height="14" rx="2"/>
+            <text class="badge-txt" x="19" y="15" text-anchor="middle">PK</text>
+            <text class="at" x="38" y="16">id</text>
+            <text class="at" x="290" y="16" text-anchor="end" fill="#5566aa">INT</text>
+          </g>
+          <g class="field" data-key="F-clients-fullname" transform="translate(0,74)">
+            <rect class="fbg" x="2" y="0" width="296" height="24"/>
+            <text class="at" x="38" y="16">fullname</text>
+            <text class="at" x="290" y="16" text-anchor="end" fill="#5566aa">VARCHAR(120)</text>
+          </g>
+          <g class="field" data-key="F-clients-email" transform="translate(0,98)">
+            <rect class="fbg" x="2" y="0" width="296" height="24"/>
+            <rect class="badge-u" x="8" y="5" width="22" height="14" rx="2"/>
+            <text class="badge-txt" x="19" y="15" text-anchor="middle">U</text>
+            <text class="at" x="38" y="16">email</text>
+            <text class="at" x="290" y="16" text-anchor="end" fill="#5566aa">VARCHAR(120)</text>
+          </g>
+          <g class="field" data-key="F-clients-phone" transform="translate(0,122)">
+            <rect class="fbg" x="2" y="0" width="296" height="24"/>
+            <text class="at" x="38" y="16">phone</text>
+            <text class="at" x="290" y="16" text-anchor="end" fill="#5566aa">VARCHAR(30)</text>
+          </g>
+          <g class="field" data-key="F-clients-city" transform="translate(0,146)">
+            <rect class="fbg" x="2" y="0" width="296" height="24"/>
+            <text class="at" x="38" y="16">city</text>
+            <text class="at" x="290" y="16" text-anchor="end" fill="#5566aa">VARCHAR(60)</text>
+          </g>
+          <g class="field" data-key="F-clients-created_at" transform="translate(0,170)">
+            <rect class="fbg" x="2" y="0" width="296" height="24"/>
+            <text class="at" x="38" y="16">created_at</text>
+            <text class="at" x="290" y="16" text-anchor="end" fill="#5566aa">TIMESTAMP</text>
+          </g>
+        </g>
+
+        <!-- ============== TABLE: orders ============== -->
+        <g class="node" data-key="T-orders" transform="translate(480,220)">
+          <rect class="outline" x="0" y="0" width="300" height="158" rx="6" fill="#cfe7d1" stroke="#2a7a32" stroke-width="1.5"/>
+          <rect x="0" y="0" width="300" height="40" rx="6" fill="#2a7a32"/>
+          <rect x="0" y="34" width="300" height="6" fill="#2a7a32"/>
+          <text class="nt" x="14" y="26">orders</text>
+          <text class="ns" x="290" y="26" text-anchor="end">παραγγελίες</text>
+
+          <g class="field" data-key="F-orders-id" transform="translate(0,50)">
+            <rect class="fbg" x="2" y="0" width="296" height="24"/>
+            <rect class="badge-pk" x="8" y="5" width="22" height="14" rx="2"/>
+            <text class="badge-txt" x="19" y="15" text-anchor="middle">PK</text>
+            <text class="at" x="38" y="16">id</text>
+            <text class="at" x="290" y="16" text-anchor="end" fill="#5566aa">INT</text>
+          </g>
+          <g class="field" data-key="F-orders-client_id" transform="translate(0,74)">
+            <rect class="fbg" x="2" y="0" width="296" height="24"/>
+            <rect class="badge-fk" x="8" y="5" width="22" height="14" rx="2"/>
+            <text class="badge-txt" x="19" y="15" text-anchor="middle">FK</text>
+            <text class="at" x="38" y="16">client_id</text>
+            <text class="at" x="290" y="16" text-anchor="end" fill="#5566aa">INT → clients.id</text>
+          </g>
+          <g class="field" data-key="F-orders-order_date" transform="translate(0,98)">
+            <rect class="fbg" x="2" y="0" width="296" height="24"/>
+            <text class="at" x="38" y="16">order_date</text>
+            <text class="at" x="290" y="16" text-anchor="end" fill="#5566aa">DATE</text>
+          </g>
+          <g class="field" data-key="F-orders-status" transform="translate(0,122)">
+            <rect class="fbg" x="2" y="0" width="296" height="24"/>
+            <text class="at" x="38" y="16">status</text>
+            <text class="at" x="290" y="16" text-anchor="end" fill="#5566aa">ENUM(4)</text>
+          </g>
+        </g>
+
+        <!-- ============== TABLE: products ============== -->
+        <g class="node" data-key="T-products" transform="translate(1010,200)">
+          <rect class="outline" x="0" y="0" width="300" height="182" rx="6" fill="#fff3d6" stroke="#a36a0d" stroke-width="1.5"/>
+          <rect x="0" y="0" width="300" height="40" rx="6" fill="#a36a0d"/>
+          <rect x="0" y="34" width="300" height="6" fill="#a36a0d"/>
+          <text class="nt" x="14" y="26">products</text>
+          <text class="ns" x="290" y="26" text-anchor="end">προϊόντα</text>
+
+          <g class="field" data-key="F-products-id" transform="translate(0,50)">
+            <rect class="fbg" x="2" y="0" width="296" height="24"/>
+            <rect class="badge-pk" x="8" y="5" width="22" height="14" rx="2"/>
+            <text class="badge-txt" x="19" y="15" text-anchor="middle">PK</text>
+            <text class="at" x="38" y="16">id</text>
+            <text class="at" x="290" y="16" text-anchor="end" fill="#5566aa">INT</text>
+          </g>
+          <g class="field" data-key="F-products-sku" transform="translate(0,74)">
+            <rect class="fbg" x="2" y="0" width="296" height="24"/>
+            <rect class="badge-u" x="8" y="5" width="22" height="14" rx="2"/>
+            <text class="badge-txt" x="19" y="15" text-anchor="middle">U</text>
+            <text class="at" x="38" y="16">sku</text>
+            <text class="at" x="290" y="16" text-anchor="end" fill="#5566aa">VARCHAR(40)</text>
+          </g>
+          <g class="field" data-key="F-products-name" transform="translate(0,98)">
+            <rect class="fbg" x="2" y="0" width="296" height="24"/>
+            <text class="at" x="38" y="16">name</text>
+            <text class="at" x="290" y="16" text-anchor="end" fill="#5566aa">VARCHAR(150)</text>
+          </g>
+          <g class="field" data-key="F-products-price" transform="translate(0,122)">
+            <rect class="fbg" x="2" y="0" width="296" height="24"/>
+            <text class="at" x="38" y="16">price</text>
+            <text class="at" x="290" y="16" text-anchor="end" fill="#5566aa">DECIMAL(10,2)</text>
+          </g>
+          <g class="field" data-key="F-products-stock" transform="translate(0,146)">
+            <rect class="fbg" x="2" y="0" width="296" height="24"/>
+            <text class="at" x="38" y="16">stock</text>
+            <text class="at" x="290" y="16" text-anchor="end" fill="#5566aa">INT default 0</text>
+          </g>
+        </g>
+
+        <!-- ============== TABLE: order_items ============== -->
+        <g class="node" data-key="T-order_items" transform="translate(480,460)">
+          <rect class="outline" x="0" y="0" width="300" height="182" rx="6" fill="#d8c9ee" stroke="#5a2db0" stroke-width="1.5"/>
+          <rect x="0" y="0" width="300" height="40" rx="6" fill="#5a2db0"/>
+          <rect x="0" y="34" width="300" height="6" fill="#5a2db0"/>
+          <text class="nt" x="14" y="26">order_items</text>
+          <text class="ns" x="290" y="26" text-anchor="end">γραμμές παραγγελίας</text>
+
+          <g class="field" data-key="F-order_items-id" transform="translate(0,50)">
+            <rect class="fbg" x="2" y="0" width="296" height="24"/>
+            <rect class="badge-pk" x="8" y="5" width="22" height="14" rx="2"/>
+            <text class="badge-txt" x="19" y="15" text-anchor="middle">PK</text>
+            <text class="at" x="38" y="16">id</text>
+            <text class="at" x="290" y="16" text-anchor="end" fill="#5566aa">INT</text>
+          </g>
+          <g class="field" data-key="F-order_items-order_id" transform="translate(0,74)">
+            <rect class="fbg" x="2" y="0" width="296" height="24"/>
+            <rect class="badge-fk" x="8" y="5" width="22" height="14" rx="2"/>
+            <text class="badge-txt" x="19" y="15" text-anchor="middle">FK</text>
+            <text class="at" x="38" y="16">order_id</text>
+            <text class="at" x="290" y="16" text-anchor="end" fill="#5566aa">INT → orders.id</text>
+          </g>
+          <g class="field" data-key="F-order_items-product_id" transform="translate(0,98)">
+            <rect class="fbg" x="2" y="0" width="296" height="24"/>
+            <rect class="badge-fk" x="8" y="5" width="22" height="14" rx="2"/>
+            <text class="badge-txt" x="19" y="15" text-anchor="middle">FK</text>
+            <text class="at" x="38" y="16">product_id</text>
+            <text class="at" x="290" y="16" text-anchor="end" fill="#5566aa">INT → products.id</text>
+          </g>
+          <g class="field" data-key="F-order_items-qty" transform="translate(0,122)">
+            <rect class="fbg" x="2" y="0" width="296" height="24"/>
+            <text class="at" x="38" y="16">qty</text>
+            <text class="at" x="290" y="16" text-anchor="end" fill="#5566aa">INT</text>
+          </g>
+          <g class="field" data-key="F-order_items-unit_price" transform="translate(0,146)">
+            <rect class="fbg" x="2" y="0" width="296" height="24"/>
+            <text class="at" x="38" y="16">unit_price</text>
+            <text class="at" x="290" y="16" text-anchor="end" fill="#5566aa">DECIMAL(10,2)</text>
+          </g>
+        </g>
+
+      </g>
+    </svg>
+  </div>
+  <aside>
+    <h2 id="p-title">Επιλέξτε στοιχείο</h2>
+    <div class="desc" id="p-desc">ER διάγραμμα της βάσης δεδομένων. Κάντε κλικ σε πίνακα, πεδίο, ή σχέση FK για λεπτομέρειες τύπου, περιορισμών, και σχεδιαστικής λογικής.</div>
+    <div class="props" id="p-props"></div>
+    <div class="hint">Σύρετε με το ποντίκι για να μετακινήσετε το διάγραμμα.</div>
+  </aside>
+</main>
+
+<script>
+const DATA = {
+  // ============ TABLES ============
+  "T-clients": {
+    title: "clients — Πίνακας πελατών",
+    desc: "Αποθηκεύει τα στοιχεία των πελατών (αγοραστών). Ένας πελάτης μπορεί να έχει πολλές παραγγελίες — σχέση 1 προς Ν με τον πίνακα orders.",
+    props: {
+      "Engine": "InnoDB",
+      "Charset": "utf8mb4_unicode_ci",
+      "Πλήθος πεδίων": "6",
+      "Primary Key": "id (AUTO_INCREMENT)",
+      "Unique": "email",
+      "Σχέση": "1 — N προς orders"
+    }
+  },
+  "T-orders": {
+    title: "orders — Πίνακας παραγγελιών",
+    desc: "Μία παραγγελία ανά γραμμή. Συνδέεται με ΕΝΑΝ πελάτη (πεδίο client_id) και περιέχει πολλές γραμμές προϊόντων μέσω του πίνακα order_items.",
+    props: {
+      "Engine": "InnoDB",
+      "Πλήθος πεδίων": "4",
+      "Primary Key": "id",
+      "Foreign Key": "client_id → clients.id",
+      "Σχέση": "N — 1 με clients · 1 — N με order_items",
+      "Status values": "NEW / PAID / SHIPPED / CANCELLED"
+    }
+  },
+  "T-products": {
+    title: "products — Πίνακας προϊόντων",
+    desc: "Κατάλογος προϊόντων με τιμή πώλησης και απόθεμα. Το πεδίο sku είναι μοναδικός κωδικός αναγνώρισης. Η τιμή μπορεί να αλλάξει χωρίς να αλλοιωθούν παλιές παραγγελίες (βλ. order_items.unit_price).",
+    props: {
+      "Engine": "InnoDB",
+      "Πλήθος πεδίων": "5",
+      "Primary Key": "id",
+      "Unique": "sku",
+      "Σχέση": "1 — N προς order_items",
+      "Διαγραφή": "RESTRICT αν υπάρχουν order_items"
+    }
+  },
+  "T-order_items": {
+    title: "order_items — Γραμμές παραγγελίας",
+    desc: "Αναλυτικές γραμμές κάθε παραγγελίας (junction / detail table). Κρατά snapshot τιμής (unit_price) ώστε μελλοντικές αλλαγές τιμών στα products να μην αλλοιώνουν το ιστορικό.",
+    props: {
+      "Engine": "InnoDB",
+      "Πλήθος πεδίων": "5",
+      "Primary Key": "id",
+      "FK1": "order_id → orders (CASCADE)",
+      "FK2": "product_id → products (RESTRICT)",
+      "Snapshot": "unit_price παγωμένο τη στιγμή της παραγγελίας",
+      "Υπολογισμός": "γραμμή = qty × unit_price"
+    }
+  },
+
+  // ============ FK ARROWS ============
+  "FK1": {
+    title: "FK1: orders.client_id → clients.id",
+    desc: "Κάθε παραγγελία ανήκει σε έναν πελάτη. Διαγραφή πελάτη παρασύρει όλες τις παραγγελίες του (ON DELETE CASCADE).",
+    props: {
+      "Cardinality": "N — 1 (πολλές παραγγελίες ανά πελάτη)",
+      "ON DELETE": "CASCADE",
+      "ON UPDATE": "CASCADE (default)",
+      "Index": "αυτόματος στο client_id (FK)",
+      "Σημείωση": "Συνήθως οι παραγγελίες δεν διαγράφονται· προτιμάται status=CANCELLED"
+    }
+  },
+  "FK2": {
+    title: "FK2: order_items.order_id → orders.id",
+    desc: "Κάθε γραμμή παραγγελίας ανήκει σε μία παραγγελία. Διαγραφή παραγγελίας διαγράφει αυτόματα και τις γραμμές της (CASCADE).",
+    props: {
+      "Cardinality": "N — 1 (πολλές γραμμές ανά παραγγελία)",
+      "ON DELETE": "CASCADE",
+      "ON UPDATE": "CASCADE",
+      "Index": "αυτόματος στο order_id",
+      "Λογική": "Οι γραμμές δεν έχουν νόημα χωρίς την παραγγελία τους"
+    }
+  },
+  "FK3": {
+    title: "FK3: order_items.product_id → products.id",
+    desc: "Κάθε γραμμή αναφέρεται σε ένα προϊόν. RESTRICT: δεν επιτρέπεται η διαγραφή προϊόντος που έχει πουληθεί — διατηρείται το ιστορικό.",
+    props: {
+      "Cardinality": "N — 1 (πολλές πωλήσεις ανά προϊόν)",
+      "ON DELETE": "RESTRICT (no action)",
+      "ON UPDATE": "CASCADE",
+      "Index": "αυτόματος στο product_id",
+      "Λογική": "Σε deactivation, βάλτε flag active=0 αντί για διαγραφή"
+    }
+  },
+
+  // ============ FIELD-LEVEL (clients) ============
+  "F-clients-id": {
+    title: "clients.id",
+    desc: "Μοναδικό αναγνωριστικό πελάτη. Αυξάνεται αυτόματα από τη βάση.",
+    props: { "Τύπος": "INT", "Κλειδί": "PRIMARY KEY", "Auto": "AUTO_INCREMENT", "NULL": "NOT NULL" }
+  },
+  "F-clients-fullname": {
+    title: "clients.fullname",
+    desc: "Πλήρες ονοματεπώνυμο πελάτη (όπως αναγράφεται στο τιμολόγιο).",
+    props: { "Τύπος": "VARCHAR(120)", "NULL": "NOT NULL", "Παράδειγμα": "Γεώργιος Παπαδόπουλος" }
+  },
+  "F-clients-email": {
+    title: "clients.email",
+    desc: "Email επικοινωνίας του πελάτη. Στο σχήμα είναι προαιρετικό και χωρίς UNIQUE constraint.",
+    props: { "Τύπος": "VARCHAR(120)", "NULL": "NULL επιτρεπτό", "Σημ.": "χωρίς UNIQUE constraint στο σχήμα — μοναδικότητα ελέγχεται από την εφαρμογή" }
+  },
+  "F-clients-phone": {
+    title: "clients.phone",
+    desc: "Τηλέφωνο επικοινωνίας — προαιρετικό. Αποθηκεύεται ως κείμενο για διατήρηση + και κενών.",
+    props: { "Τύπος": "VARCHAR(30)", "NULL": "NULL επιτρεπτό", "Μορφή": "ελεύθερη π.χ. +30 210 1234567" }
+  },
+  "F-clients-city": {
+    title: "clients.city",
+    desc: "Πόλη του πελάτη. Δεν κανονικοποιείται σε ξεχωριστό πίνακα cities — αρκεί για αναφορές.",
+    props: { "Τύπος": "VARCHAR(60)", "NULL": "NULL επιτρεπτό", "Σημ.": "Αν χρειαστούν αναφορές ανά νομό, μετατροπή σε FK προς cities" }
+  },
+  "F-clients-created_at": {
+    title: "clients.created_at",
+    desc: "Χρονοσφραγίδα δημιουργίας εγγραφής. Συμπληρώνεται αυτόματα από τη βάση.",
+    props: { "Τύπος": "TIMESTAMP", "Default": "CURRENT_TIMESTAMP", "NULL": "NOT NULL" }
+  },
+
+  // ============ FIELD-LEVEL (orders) ============
+  "F-orders-id": {
+    title: "orders.id",
+    desc: "Μοναδικός αριθμός παραγγελίας. Χρησιμοποιείται σαν αναφορά σε τιμολόγια, αποστολές, και γραμμές order_items.",
+    props: { "Τύπος": "INT", "Κλειδί": "PRIMARY KEY", "Auto": "AUTO_INCREMENT" }
+  },
+  "F-orders-client_id": {
+    title: "orders.client_id",
+    desc: "Foreign key προς τον πελάτη που έκανε την παραγγελία. Υποχρεωτικό — δεν επιτρέπεται ορφανή παραγγελία.",
+    props: { "Τύπος": "INT", "FK": "→ clients.id", "ON DELETE": "CASCADE", "NULL": "NOT NULL", "Index": "ναι" }
+  },
+  "F-orders-order_date": {
+    title: "orders.order_date",
+    desc: "Ημερομηνία παραγγελίας (όχι ώρα). Χρησιμοποιείται για αναφορές πωλήσεων ανά ημέρα/μήνα.",
+    props: { "Τύπος": "DATE", "NULL": "NOT NULL", "Σημ.": "χωρίς default — η εφαρμογή περνά την ημερομηνία" }
+  },
+  "F-orders-status": {
+    title: "orders.status",
+    desc: "Κατάσταση παραγγελίας. Διαδρομή: NEW → PAID → SHIPPED. Ή CANCELLED αν ακυρωθεί πριν την αποστολή.",
+    props: {
+      "Τύπος": "ENUM",
+      "Τιμές": "NEW, PAID, SHIPPED, CANCELLED",
+      "Default": "NEW",
+      "NULL": "NULL επιτρεπτό (DEFAULT 'NEW')"
+    }
+  },
+
+  // ============ FIELD-LEVEL (products) ============
+  "F-products-id": {
+    title: "products.id",
+    desc: "Μοναδικό αναγνωριστικό προϊόντος. Εσωτερική αρίθμηση της βάσης.",
+    props: { "Τύπος": "INT", "Κλειδί": "PRIMARY KEY", "Auto": "AUTO_INCREMENT" }
+  },
+  "F-products-sku": {
+    title: "products.sku",
+    desc: "Stock Keeping Unit — μοναδικός εμπορικός κωδικός προϊόντος. Χρησιμοποιείται σε ετικέτες, barcode, αποθήκη.",
+    props: { "Τύπος": "VARCHAR(40)", "Κλειδί": "UNIQUE", "NULL": "NOT NULL", "Παράδειγμα": "ABC-001-RED" }
+  },
+  "F-products-name": {
+    title: "products.name",
+    desc: "Εμπορική περιγραφή προϊόντος. Εμφανίζεται σε καταλόγους και τιμολόγια.",
+    props: { "Τύπος": "VARCHAR(150)", "NULL": "NOT NULL" }
+  },
+  "F-products-price": {
+    title: "products.price",
+    desc: "Τρέχουσα τιμή λιανικής (με ή χωρίς ΦΠΑ — επιλογή σχεδιασμού). Μπορεί να αλλάξει· οι παλιές παραγγελίες κρατούν τη δική τους τιμή στο order_items.unit_price.",
+    props: { "Τύπος": "DECIMAL(10,2)", "NULL": "NOT NULL", "Νόμισμα": "EUR (υποτίθεται)", "Σημ.": "Όχι FLOAT — αποφυγή σφαλμάτων στρογγυλοποίησης" }
+  },
+  "F-products-stock": {
+    title: "products.stock",
+    desc: "Διαθέσιμο απόθεμα. Μειώνεται αυτόματα (μέσω trigger ή λογικής εφαρμογής) όταν δημιουργείται order_items.",
+    props: { "Τύπος": "INT", "Default": "0", "NULL": "NOT NULL", "Σημ.": "Αρνητικές τιμές δείχνουν backorder" }
+  },
+
+  // ============ FIELD-LEVEL (order_items) ============
+  "F-order_items-id": {
+    title: "order_items.id",
+    desc: "Μοναδικό αναγνωριστικό γραμμής (σπάνια χρησιμοποιείται εξωτερικά — αναφερόμαστε με order_id+product_id).",
+    props: { "Τύπος": "INT", "Κλειδί": "PRIMARY KEY", "Auto": "AUTO_INCREMENT" }
+  },
+  "F-order_items-order_id": {
+    title: "order_items.order_id",
+    desc: "Foreign key προς την παραγγελία στην οποία ανήκει η γραμμή. CASCADE: αν διαγραφεί η παραγγελία, διαγράφονται και οι γραμμές.",
+    props: { "Τύπος": "INT", "FK": "→ orders.id", "ON DELETE": "CASCADE", "NULL": "NOT NULL", "Index": "ναι" }
+  },
+  "F-order_items-product_id": {
+    title: "order_items.product_id",
+    desc: "Foreign key προς το προϊόν που πωλείται. RESTRICT: δεν μπορεί να διαγραφεί προϊόν που υπάρχει σε γραμμές παραγγελιών (διατήρηση ιστορικού).",
+    props: { "Τύπος": "INT", "FK": "→ products.id", "ON DELETE": "RESTRICT", "NULL": "NOT NULL", "Index": "ναι" }
+  },
+  "F-order_items-qty": {
+    title: "order_items.qty",
+    desc: "Ποσότητα τεμαχίων του προϊόντος σε αυτή τη γραμμή. Πρέπει να είναι θετικός ακέραιος.",
+    props: { "Τύπος": "INT", "NULL": "NOT NULL", "Default": "1", "Σημ.": "χωρίς CHECK constraint — η εφαρμογή ελέγχει qty > 0" }
+  },
+  "F-order_items-unit_price": {
+    title: "order_items.unit_price",
+    desc: "Σημαντικό σχεδιαστικό χαρακτηριστικό: αυτή είναι αντίγραφο (snapshot) της τιμής προϊόντος τη στιγμή της παραγγελίας — όχι ζωντανή αναφορά στο products.price.",
+    props: {
+      "Τύπος": "DECIMAL(10,2)",
+      "NULL": "NOT NULL",
+      "Λογική": "αλλαγές στο products.price ΔΕΝ επηρεάζουν παλιές παραγγελίες",
+      "Σύνολο γραμμής": "qty × unit_price",
+      "Σημ.": "Αντιγράφεται από products.price στο INSERT"
+    }
+  }
+};
+
+// ============ Interaction ============
+const stage  = document.getElementById('stage');
+const svg    = document.getElementById('svg');
+const world  = document.getElementById('world');
+const pTitle = document.getElementById('p-title');
+const pDesc  = document.getElementById('p-desc');
+const pProps = document.getElementById('p-props');
+
+let pan = { x: 0, y: 0 };
+let drag = null;
+let selected = null;
+
+function applyPan() {
+  world.setAttribute('transform', `translate(${pan.x},${pan.y})`);
+}
+
+function showInfo(key) {
+  const d = DATA[key];
+  if (!d) return;
+  pTitle.textContent = d.title;
+  pDesc.textContent  = d.desc;
+  pProps.innerHTML   = '';
+  for (const k in d.props) {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = `<div class="k">${k}</div><div class="v">${d.props[k]}</div>`;
+    pProps.appendChild(row);
+  }
+}
+
+function select(el) {
+  if (selected) selected.classList.remove('selected');
+  selected = el;
+  if (el) {
+    el.classList.add('selected');
+    showInfo(el.getAttribute('data-key'));
+  }
+}
+
+// Click delegation — fields take priority over tables
+svg.addEventListener('click', (e) => {
+  if (drag && drag.moved) return;
+  const field = e.target.closest('.field');
+  if (field) { select(field); e.stopPropagation(); return; }
+  const arrow = e.target.closest('.arrow');
+  if (arrow) { select(arrow); e.stopPropagation(); return; }
+  const node = e.target.closest('.node');
+  if (node) { select(node); return; }
+});
+
+// Drag-to-pan
+stage.addEventListener('mousedown', (e) => {
+  drag = { x0: e.clientX, y0: e.clientY, px: pan.x, py: pan.y, moved: false };
+  stage.classList.add('dragging');
+});
+window.addEventListener('mousemove', (e) => {
+  if (!drag) return;
+  const dx = e.clientX - drag.x0;
+  const dy = e.clientY - drag.y0;
+  if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
+  // Scale: viewBox 1400 wide; map screen px to viewBox units
+  const rect = stage.getBoundingClientRect();
+  const scale = 1400 / rect.width;
+  pan.x = drag.px + dx * scale;
+  pan.y = drag.py + dy * scale;
+  applyPan();
+});
+window.addEventListener('mouseup', () => {
+  if (drag) {
+    stage.classList.remove('dragging');
+    setTimeout(() => { drag = null; }, 0);
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<title>Αρχιτεκτονική 3-tier — XAMPP web εφαρμογή</title>
+<style>
+  /* page chrome */
+  html,body { margin:0; padding:0; height:100%; font-family: "DejaVu Sans", "Segoe UI", sans-serif; background:#1a1a2e; color:#f5f7fa; overflow:hidden; }
+  body { display:flex; flex-direction:column; height:100vh; }
+  h1 { margin:8px 14px; font-size:18px; font-weight:600; color:#f5f7fa; }
+  #main { display:flex; flex:1; overflow:hidden; }
+
+  /* svg canvas (left) */
+  #wrap { flex:1; overflow:auto; cursor:grab; user-select:none; background:#f5f7fa; }
+  #wrap.dragging { cursor:grabbing; }
+  svg { display:block; }
+
+  /* details panel (right) */
+  #panel { width:320px; background:#16213e; color:#f5f7fa; padding:16px 18px; overflow-y:auto; box-sizing:border-box; border-left:1px solid #0d1b2a; }
+  #panel h2 { margin:0 0 8px 0; font-size:16px; color:#ffd479; border-bottom:1px solid #2a3a5a; padding-bottom:6px; }
+  #panel p  { margin:6px 0 12px 0; font-size:13px; line-height:1.45; color:#d8dce5; }
+  #panel table { width:100%; border-collapse:collapse; font-size:12px; }
+  #panel td { padding:4px 6px; vertical-align:top; border-bottom:1px solid #243a5e; }
+  #panel td:first-child { color:#9fb3d8; width:38%; }
+  #panel td:last-child  { color:#f5f7fa; }
+  #hint { margin-top:14px; font-size:11px; color:#6f7e9c; font-style:italic; }
+
+  /* svg styles */
+  .node       { cursor:pointer; transition: filter 0.15s; }
+  .node:hover { filter: brightness(1.05); }
+  .node.selected rect, .node.selected path { stroke:#ffd479 !important; stroke-width:4 !important; }
+
+  .arrow      { cursor:pointer; }
+  .arrow:hover line, .arrow:hover path { stroke:#ffd479; }
+  .arrow.selected line, .arrow.selected path { stroke:#ffd479; stroke-width:3; }
+
+  /* text classes — pointer-events:none so clicks fall through to shape */
+  .nt { font-size:15px; font-weight:700; text-anchor:middle; pointer-events:none; }
+  .ns { font-size:11px; text-anchor:middle; pointer-events:none; fill:#333; }
+  .at { font-size:11px; text-anchor:middle; pointer-events:none; fill:#2a2a2a; font-style:italic; }
+  .title { font-size:18px; font-weight:700; text-anchor:middle; pointer-events:none; fill:#1a1a2e; }
+  .subtitle { font-size:12px; text-anchor:middle; pointer-events:none; fill:#555; font-style:italic; }
+</style>
+</head>
+<body>
+
+<nav class="topnav" style="padding:8px 24px;background:#f7f9fc;border-bottom:1px solid #ccc;font-size:13px;display:flex;gap:18px;">
+  <a href="index.html" style="color:#1a4f8a;text-decoration:none;">⬅ Interactive Diagrams</a>
+  <a href="../report.html" style="color:#1a4f8a;text-decoration:none;">📄 Αναφορά</a>
+  <a href="https://github.com/idpe19389308/papi-net" style="color:#1a4f8a;text-decoration:none;">🐙 GitHub</a>
+</nav>
+
+<h1>Αρχιτεκτονική 3-tier — XAMPP web εφαρμογή</h1>
+
+<div id="main">
+  <div id="wrap">
+    <svg id="svg" viewBox="0 0 1400 810" width="1400" height="810" xmlns="http://www.w3.org/2000/svg">
+
+      <!-- arrowhead marker definitions -->
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#444"/>
+        </marker>
+        <marker id="arrG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#ffd479"/>
+        </marker>
+      </defs>
+
+      <!-- page title and subtitle -->
+      <text x="700" y="40"  class="title">Αρχιτεκτονική 3-tier — XAMPP web εφαρμογή</text>
+      <text x="700" y="62"  class="subtitle">Παρουσίαση → Web server → Επιχειρησιακή λογική → Δεδομένα</text>
+
+      <!-- tier captions above each box -->
+      <text x="220"  y="230" class="subtitle">① Παρουσίαση</text>
+      <text x="550"  y="230" class="subtitle">② Web server</text>
+      <text x="880"  y="230" class="subtitle">③ Επιχειρησιακή λογική</text>
+      <text x="1210" y="230" class="subtitle">④ Επίπεδο δεδομένων</text>
+
+      <!-- ===== arrows first (so nodes paint over their tails) ===== -->
+
+      <!-- Arrows 1: Browser ↔ Apache -->
+      <g class="arrow" data-key="ARR-1A">
+        <!-- invisible thick hit area for clicks -->
+        <line x1="340" y1="370" x2="430" y2="370" stroke="transparent" stroke-width="18"/>
+        <line x1="340" y1="370" x2="430" y2="370" stroke="#444" stroke-width="2" marker-end="url(#arr)"/>
+        <text x="385" y="362" class="at">HTTP request</text>
+      </g>
+      <g class="arrow" data-key="ARR-1B">
+        <line x1="430" y1="430" x2="340" y2="430" stroke="transparent" stroke-width="18"/>
+        <line x1="430" y1="430" x2="340" y2="430" stroke="#444" stroke-width="2" marker-end="url(#arr)"/>
+        <text x="385" y="448" class="at">HTML response</text>
+      </g>
+
+      <!-- Arrows 2: Apache ↔ PHP -->
+      <g class="arrow" data-key="ARR-2A">
+        <line x1="670" y1="370" x2="760" y2="370" stroke="transparent" stroke-width="18"/>
+        <line x1="670" y1="370" x2="760" y2="370" stroke="#444" stroke-width="2" marker-end="url(#arr)"/>
+        <text x="715" y="362" class="at">FastCGI / mod_php</text>
+      </g>
+      <g class="arrow" data-key="ARR-2B">
+        <line x1="760" y1="430" x2="670" y2="430" stroke="transparent" stroke-width="18"/>
+        <line x1="760" y1="430" x2="670" y2="430" stroke="#444" stroke-width="2" marker-end="url(#arr)"/>
+        <text x="715" y="448" class="at">rendered HTML</text>
+      </g>
+
+      <!-- Arrows 3: PHP ↔ MariaDB -->
+      <g class="arrow" data-key="ARR-3A">
+        <line x1="1000" y1="370" x2="1090" y2="370" stroke="transparent" stroke-width="18"/>
+        <line x1="1000" y1="370" x2="1090" y2="370" stroke="#444" stroke-width="2" marker-end="url(#arr)"/>
+        <text x="1045" y="362" class="at">SQL (prepared)</text>
+      </g>
+      <g class="arrow" data-key="ARR-3B">
+        <line x1="1090" y1="430" x2="1000" y2="430" stroke="transparent" stroke-width="18"/>
+        <line x1="1090" y1="430" x2="1000" y2="430" stroke="#444" stroke-width="2" marker-end="url(#arr)"/>
+        <text x="1045" y="448" class="at">result set</text>
+      </g>
+
+      <!-- ===== tier nodes ===== -->
+
+      <!-- (1) Browser -->
+      <g class="node" data-key="BROWSER">
+        <rect x="100" y="250" width="240" height="300" rx="14" fill="#cfe7d1" stroke="#2a7a32" stroke-width="2"/>
+        <text x="220" y="295" class="nt">Browser</text>
+        <text x="220" y="315" class="ns">(Παρουσίαση)</text>
+        <text x="220" y="360" class="ns">HTML5 / CSS3</text>
+        <text x="220" y="380" class="ns">Φόρμες, links, GET/POST</text>
+        <text x="220" y="410" class="ns">— — — — —</text>
+        <text x="220" y="440" class="ns">Client-side validation</text>
+        <text x="220" y="465" class="ns">(λίγο JavaScript)</text>
+        <text x="220" y="510" class="ns" style="fill:#1a4a1a; font-weight:600;">Chrome · Firefox · Edge</text>
+      </g>
+
+      <!-- (2) Apache -->
+      <g class="node" data-key="APACHE">
+        <rect x="430" y="250" width="240" height="300" rx="14" fill="#cfe0f0" stroke="#1a4f8a" stroke-width="2"/>
+        <text x="550" y="295" class="nt">Apache 2.4</text>
+        <text x="550" y="315" class="ns">(XAMPP)</text>
+        <text x="550" y="360" class="ns">Port 80 (HTTP)</text>
+        <text x="550" y="380" class="ns">DocumentRoot: htdocs/</text>
+        <text x="550" y="410" class="ns">— — — — —</text>
+        <text x="550" y="440" class="ns">mod_php · mod_rewrite</text>
+        <text x="550" y="465" class="ns">Στατικά (CSS, εικόνες)</text>
+        <text x="550" y="510" class="ns" style="fill:#0d2a4a; font-weight:600;">Web server / router</text>
+      </g>
+
+      <!-- (3) PHP -->
+      <g class="node" data-key="PHP">
+        <rect x="760" y="250" width="240" height="300" rx="14" fill="#f9e0a8" stroke="#a36a0d" stroke-width="2"/>
+        <text x="880" y="295" class="nt">PHP 8 + PDO</text>
+        <text x="880" y="315" class="ns">(Επιχ. λογική)</text>
+        <text x="880" y="350" class="ns">7 δυναμικές σελίδες:</text>
+        <text x="880" y="370" class="ns">index, clients(_edit),</text>
+        <text x="880" y="388" class="ns">products(_edit),</text>
+        <text x="880" y="406" class="ns">orders, orders_view</text>
+        <text x="880" y="436" class="ns">— — — — —</text>
+        <text x="880" y="465" class="ns">PDO prepared statements</text>
+        <text x="880" y="510" class="ns" style="fill:#5a3a05; font-weight:600;">CRUD + business rules</text>
+      </g>
+
+      <!-- (4) MariaDB -->
+      <g class="node" data-key="MARIADB">
+        <rect x="1090" y="250" width="240" height="300" rx="14" fill="#d8c9ee" stroke="#5a2db0" stroke-width="2"/>
+        <text x="1210" y="295" class="nt">MariaDB</text>
+        <text x="1210" y="315" class="ns">(Επίπεδο δεδομένων)</text>
+        <text x="1210" y="355" class="ns">DB: papinet</text>
+        <text x="1210" y="378" class="ns">Engine: InnoDB</text>
+        <text x="1210" y="401" class="ns">utf8mb4_unicode_ci</text>
+        <text x="1210" y="431" class="ns">— — — — —</text>
+        <text x="1210" y="460" class="ns">4 πίνακες · FK CASCADE</text>
+        <text x="1210" y="510" class="ns" style="fill:#3a1570; font-weight:600;">Persistent storage</text>
+      </g>
+
+      <!-- ===== Security callout (below tiers) ===== -->
+      <g class="node" data-key="SECURITY">
+        <rect x="100" y="620" width="1230" height="150" rx="14" fill="#fff3c4" stroke="#a36a0d" stroke-width="2" stroke-dasharray="6,4"/>
+        <text x="715" y="655" class="nt" style="fill:#5a3a05;">Ασφάλεια — εγκάρσιο επίπεδο (cross-cutting concern)</text>
+        <text x="715" y="678" class="ns" style="fill:#5a3a05;">Καλύπτει όλα τα tiers · κάντε κλικ για λεπτομέρειες</text>
+        <text x="180"  y="715" class="ns" style="text-anchor:start;">• PDO prepared statements → SQL injection</text>
+        <text x="180"  y="735" class="ns" style="text-anchor:start;">• htmlspecialchars(ENT_QUOTES) → XSS</text>
+        <text x="180"  y="755" class="ns" style="text-anchor:start;">• ENUM whitelist στο orders.status</text>
+        <text x="780"  y="715" class="ns" style="text-anchor:start;">• UTF-8 headers (Content-Type)</text>
+        <text x="780"  y="735" class="ns" style="text-anchor:start;">• Server-side validation (όχι μόνο client)</text>
+        <text x="780"  y="755" class="ns" style="text-anchor:start;">• (Παράλειψη: CSRF tokens — demo σε localhost)</text>
+      </g>
+
+    </svg>
+  </div>
+
+  <!-- ===== right-side details panel ===== -->
+  <div id="panel">
+    <h2 id="p-title">Επιλέξτε ένα στοιχείο</h2>
+    <p  id="p-desc">Αρχιτεκτονική 3-tier client–server της εφαρμογής διαχείρισης παραγγελιών. Κάντε κλικ σε κάθε επίπεδο ή βέλος για λεπτομέρειες πρωτοκόλλου και ασφάλειας.</p>
+    <table id="p-props"></table>
+    <div id="hint">Σύρετε για μετακίνηση (pan) · κάντε κλικ για επιλογή</div>
+  </div>
+</div>
+
+<script>
+// ===== DATA — one entry per data-key on the SVG =====
+const DATA = {
+  "BROWSER": {
+    title: "Browser (Παρουσίαση)",
+    desc:  "Client-side επίπεδο — αποδίδει HTML/CSS, στέλνει αιτήματα HTTP, υποβάλλει φόρμες. Δεν περιέχει επιχειρησιακή λογική · μόνο εμφάνιση και ελαφρύς έλεγχος εισόδων.",
+    props: {
+      "Τεχνολογίες": "HTML5, CSS3, λίγο JS",
+      "Validation": "Client-side check + server-side έλεγχος",
+      "Πρωτόκολλο": "HTTP/HTTPS"
+    }
+  },
+  "APACHE": {
+    title: "Apache (XAMPP)",
+    desc:  "Web server που λαμβάνει HTTP requests και τα διανέμει είτε σε στατικό περιεχόμενο (CSS, εικόνες) είτε στον PHP interpreter για δυναμικές σελίδες.",
+    props: {
+      "Έκδοση": "Apache 2.4 (XAMPP bundle)",
+      "Port": "80 (default)",
+      "Modules": "mod_php / mod_rewrite",
+      "Στατικά": "CSS, εικόνες απευθείας"
+    }
+  },
+  "PHP": {
+    title: "PHP 8 με PDO",
+    desc:  "Επιχειρησιακή λογική της εφαρμογής — εκτελεί τις 7 δυναμικές σελίδες CRUD (πελάτες, προϊόντα, παραγγελίες) και μιλάει στη βάση μέσω PDO με prepared statements.",
+    props: {
+      "Έκδοση": "PHP 8.x",
+      "DB driver": "PDO (PHP Data Objects)",
+      "Pattern": "Prepared statements παντού",
+      "Σελίδες": "index, clients(_edit), products(_edit), orders, orders_view"
+    }
+  },
+  "MARIADB": {
+    title: "MariaDB / MySQL (papinet)",
+    desc:  "Σχεσιακή βάση δεδομένων — αποθηκεύει πελάτες, προϊόντα, παραγγελίες και γραμμές παραγγελίας. Foreign keys με CASCADE διασφαλίζουν τη συνέπεια.",
+    props: {
+      "Engine": "InnoDB",
+      "Charset": "utf8mb4_unicode_ci",
+      "Πίνακες": "4 (clients, products, orders, order_items)",
+      "FKs": "CASCADE σε clients→orders, orders→order_items"
+    }
+  },
+  "ARR-1A": {
+    title: "① HTTP request — Browser → Apache",
+    desc:  "Ο φυλλομετρητής στέλνει GET ή POST request στον Apache server στη θύρα 80. Περιέχει headers (User-Agent, Cookie) και προαιρετικά body με δεδομένα φόρμας.",
+    props: {
+      "Methods": "GET, POST",
+      "Headers": "User-Agent, Cookie, Content-Type",
+      "Body": "form fields (POST)"
+    }
+  },
+  "ARR-1B": {
+    title: "① HTML response — Apache → Browser",
+    desc:  "Ο Apache επιστρέφει την τελική HTML σελίδα μαζί με headers (status 200/302/404, Content-Type: text/html; charset=utf-8). Ο browser την αποδίδει στον χρήστη.",
+    props: {
+      "Status": "200 OK / 302 Redirect / 4xx-5xx",
+      "Headers": "Content-Type, Set-Cookie, Cache-Control",
+      "Body": "HTML markup (UTF-8)"
+    }
+  },
+  "ARR-2A": {
+    title: "② FastCGI / mod_php — Apache → PHP",
+    desc:  "Όταν το request είναι για αρχείο .php, ο Apache το προωθεί στον PHP interpreter μέσω mod_php (in-process) ή FastCGI (out-of-process) για εκτέλεση.",
+    props: {
+      "Μηχανισμός": "mod_php (XAMPP default) ή php-fpm/FastCGI",
+      "Είσοδος": "$_GET, $_POST, $_SERVER, $_COOKIE",
+      "Process": "Ένα PHP request ανά HTTP request"
+    }
+  },
+  "ARR-2B": {
+    title: "② rendered HTML — PHP → Apache",
+    desc:  "Το PHP script εκτελείται, παράγει HTML output (echo) και το επιστρέφει στον Apache, ο οποίος το μεταφέρει αυτούσιο στον browser.",
+    props: {
+      "Output": "stdout → HTTP response body",
+      "Headers": "header() από PHP πριν το πρώτο echo",
+      "Encoding": "UTF-8 (htmlspecialchars για safety)"
+    }
+  },
+  "ARR-3A": {
+    title: "③ SQL (prepared) — PHP → MariaDB",
+    desc:  "Το PHP δημιουργεί prepared statement μέσω PDO::prepare(), δεσμεύει παραμέτρους με bindParam/bindValue και το εκτελεί. Η βάση δεν βλέπει ποτέ user input ως κώδικα.",
+    props: {
+      "Driver": "PDO_MYSQL",
+      "Pattern": "prepare → bind → execute",
+      "Security": "Παράμετροι ποτέ δεν συγχωνεύονται στο SQL string"
+    }
+  },
+  "ARR-3B": {
+    title: "③ result set — MariaDB → PHP",
+    desc:  "Η MariaDB επιστρέφει το αποτέλεσμα του query (rows ή OK status). Το PHP το λαμβάνει με fetch()/fetchAll() ως associative array.",
+    props: {
+      "Fetch mode": "PDO::FETCH_ASSOC",
+      "Επιστροφή": "array rows · ή rowCount() για INSERT/UPDATE/DELETE",
+      "Charset": "utf8mb4 end-to-end"
+    }
+  },
+  "SECURITY": {
+    title: "Στρώματα ασφάλειας της εφαρμογής",
+    desc:  "Άμυνα σε πολλά επίπεδα κατά τις πιο κοινές web επιθέσεις (OWASP Top 10). Κάθε tier συνεισφέρει: validation στον browser, sanitization στον PHP, prepared statements στη βάση.",
+    props: {
+      "SQL injection": "Αποτρέπεται με PDO prepared statements + parameter binding (όχι concat)",
+      "XSS": "Όλα τα echo περνούν από htmlspecialchars(ENT_QUOTES,'UTF-8')",
+      "ENUM whitelist": "Πεδίο orders.status περιορίζεται σε NEW/PAID/SHIPPED/CANCELLED",
+      "Charset": "Content-Type: text/html; charset=utf-8 ρητά",
+      "Παράλειψη": "CSRF tokens — εκπαιδευτικό demo σε localhost"
+    }
+  }
+};
+
+// ===== panel rendering =====
+const pTitle = document.getElementById('p-title');
+const pDesc  = document.getElementById('p-desc');
+const pProps = document.getElementById('p-props');
+
+function showDetails(key) {
+  const d = DATA[key];
+  if (!d) return;
+  pTitle.textContent = d.title;
+  pDesc.textContent  = d.desc;
+  pProps.innerHTML = '';
+  if (d.props) {
+    for (const k in d.props) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + k + '</td><td>' + d.props[k] + '</td>';
+      pProps.appendChild(tr);
+    }
+  }
+}
+
+// ===== click selection =====
+let selected = null;
+function bindClicks() {
+  document.querySelectorAll('[data-key]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (selected) selected.classList.remove('selected');
+      el.classList.add('selected');
+      selected = el;
+      showDetails(el.getAttribute('data-key'));
+    });
+  });
+}
+bindClicks();
+
+// ===== drag-to-pan on the wrap div =====
+const wrap = document.getElementById('wrap');
+let panning = false, startX = 0, startY = 0, startSL = 0, startST = 0;
+
+wrap.addEventListener('mousedown', (e) => {
+  // only start pan if not clicking a node/arrow
+  if (e.target.closest('[data-key]')) return;
+  panning = true;
+  startX = e.clientX; startY = e.clientY;
+  startSL = wrap.scrollLeft; startST = wrap.scrollTop;
+  wrap.classList.add('dragging');
+});
+
+window.addEventListener('mousemove', (e) => {
+  if (!panning) return;
+  wrap.scrollLeft = startSL - (e.clientX - startX);
+  wrap.scrollTop  = startST - (e.clientY - startY);
+});
+
+window.addEventListener('mouseup', () => {
+  panning = false;
+  wrap.classList.remove('dragging');
+});
+</script>
+</body>
+</html>

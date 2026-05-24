@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <title>README.txt</title>
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body id="top">
+  <nav class="topnav">
+    <a href="../../index.html">🏠 Αρχή</a>
+    <a href="../../final-report/report.html">📄 Αναφορά</a>
+    <a href="../../final-report/interactive/index.html">🌐 Διαγράμματα</a>
+    <a href="../../webapp/README.html">📦 Webapp</a>
+    <a href="https://github.com/idpe19389308/papi-net">🐙 GitHub</a>
+    <span class="breadcrumb">packet-tracer › configs › README</span>
+  </nav>
+  <main>
+<h1>🔧 packet-tracer/configs/ — Network configs</h1>
+
+<p>Έτοιμα configurations για copy-paste στο Cisco Packet Tracer. Κάθε αρχείο φορτώνεται σε CLI της αντίστοιχης συσκευής.</p>
+
+<figure style="margin: 18px 0; text-align: center;">
+  <img src="../../final-report/img/screenshot-pt-topology.png" alt="Δικτυακή τοπολογία στο Packet Tracer — 5 παραρτήματα" style="max-width: 100%; height: auto; border: 1px solid #dde; border-radius: 6px;">
+  <figcaption style="margin-top: 8px; font-size: 13px; color: #666; font-style: italic;">Δικτυακή τοπολογία στο Cisco Packet Tracer — 5 παραρτήματα (Ιωάννινα, Θεσσαλονίκη, Αθήνα, Πάτρα, Χανιά) με 5 routers + 5 switches + 15 PCs + WebServer/FileServer στα Ιωάννινα.</figcaption>
+</figure>
+
+<h2>Περιεχόμενα φακέλου</h2>
+
+<table>
+  <thead><tr><th>Συσκευή</th><th>Παράρτημα</th><th>Ρόλος</th></tr></thead>
+  <tbody>
+    <tr><td><a href="R-IOA.html">R-IOA.txt</a></td><td>Ιωάννινα</td><td>Δρομολογητής — 2 WAN προς THE &amp; PAT</td></tr>
+    <tr><td><a href="R-THE.html">R-THE.txt</a></td><td>Θεσσαλονίκη</td><td>Δρομολογητής — 2 WAN προς IOA &amp; ATH</td></tr>
+    <tr><td><a href="R-ATH.html">R-ATH.txt</a></td><td>Αθήνα</td><td>Δρομολογητής — 2 WAN προς THE &amp; CHA <em>(+ ACL 110 demo)</em></td></tr>
+    <tr><td><a href="R-PAT.html">R-PAT.txt</a></td><td>Πάτρα</td><td>Δρομολογητής — 2 WAN προς IOA &amp; CHA</td></tr>
+    <tr><td><a href="R-CHA.html">R-CHA.txt</a></td><td>Χανιά</td><td>Δρομολογητής — 2 WAN προς ATH &amp; PAT</td></tr>
+    <tr><td><a href="SW-IOA.html">SW-IOA.txt</a></td><td>Ιωάννινα</td><td>Switch — 3 VLAN access + trunk</td></tr>
+    <tr><td><a href="SW-THE.html">SW-THE.txt</a></td><td>Θεσσαλονίκη</td><td>Switch — 3 VLAN access + trunk</td></tr>
+    <tr><td><a href="SW-ATH.html">SW-ATH.txt</a></td><td>Αθήνα</td><td>Switch — 3 VLAN access + trunk</td></tr>
+    <tr><td><a href="SW-PAT.html">SW-PAT.txt</a></td><td>Πάτρα</td><td>Switch — 3 VLAN access + trunk</td></tr>
+    <tr><td><a href="SW-CHA.html">SW-CHA.txt</a></td><td>Χανιά</td><td>Switch — 3 VLAN access + trunk</td></tr>
+  </tbody>
+</table>
+
+<p><strong>Λήψη συνολικού οδηγού</strong>: 📥 <a href="README.txt">README.txt</a></p>
+
+<h2>Εξοπλισμός στο Packet Tracer</h2>
+
+<ul>
+  <li><strong>Routers</strong>: 5 × Cisco PT8200 (4 × GigabitEthernet built-in)</li>
+  <li><strong>Switches</strong>: 5 × Cisco 2960-24TT</li>
+  <li><strong>PCs</strong>: 15 × Generic PC-PT (3 ανά παράρτημα — ένα PC ανά τμήμα)</li>
+  <li><strong>Servers</strong>: 2 × Generic PC-PT στο παράρτημα Ιωαννίνων (WebServer + FileServer)</li>
+</ul>
+
+<p>Κάθε router χρησιμοποιεί:</p>
+<ul>
+  <li><code>GigabitEthernet0/0/0</code> → LAN trunk προς το switch (router-on-a-stick με VLAN subinterfaces .10/.20/.30)</li>
+  <li><code>GigabitEthernet0/0/1</code> → WAN προς γείτονα Α</li>
+  <li><code>GigabitEthernet0/0/2</code> → WAN προς γείτονα Β</li>
+  <li><code>GigabitEthernet0/0/3</code> → εφεδρικό (ασύνδετο)</li>
+</ul>
+
+<h2>Πώς φορτώνουμε ένα config σε μια συσκευή</h2>
+
+<ol>
+  <li>Διπλό κλικ πάνω στη συσκευή (router ή switch).</li>
+  <li>Πάμε στην καρτέλα <strong>CLI</strong>.</li>
+  <li>Πατάμε ENTER αν χρειάζεται για να εμφανιστεί το prompt.</li>
+  <li>Στην ερώτηση <em>«Continue with configuration dialog?»</em> απαντάμε <strong>no</strong>.</li>
+  <li>Πληκτρολογούμε:
+    <pre><code>enable
+configure terminal</code></pre>
+  </li>
+  <li>Copy ολόκληρο το αντίστοιχο <code>.txt</code> αρχείο (από <code>hostname</code> μέχρι <code>end</code>) και paste στο CLI παράθυρο.</li>
+  <li>Αποθήκευση ώστε να επιβιώσει σε reboot:
+    <pre><code>copy running-config startup-config</code></pre>
+  </li>
+</ol>
+
+<h2>Σειρά ρύθμισης (προτεινόμενη)</h2>
+
+<ol>
+  <li>Όλα τα <strong>switches</strong> πρώτα (SW-IOA → SW-THE → SW-ATH → SW-PAT → SW-CHA).</li>
+  <li>Όλα τα <strong>routers</strong> μετά (R-IOA → R-THE → R-ATH → R-PAT → R-CHA).</li>
+  <li>Στους <strong>PC</strong> βάζουμε IP/Mask/Gateway χειροκίνητα από <em>Desktop → IP Configuration</em>.</li>
+</ol>
+
+<h2>VLAN σχήμα (ίδιο σε κάθε παράρτημα)</h2>
+
+<table>
+  <thead><tr><th>VLAN</th><th>Τμήμα</th><th>Υποδίκτυο</th><th>Router IP</th></tr></thead>
+  <tbody>
+    <tr><td><strong>10</strong></td><td>Λογιστήριο</td><td><code>.0/26</code></td><td><code>.1</code></td></tr>
+    <tr><td><strong>20</strong></td><td>Διεύθυνση</td><td><code>.64/26</code></td><td><code>.65</code></td></tr>
+    <tr><td><strong>30</strong></td><td>Software Developers</td><td><code>.128/26</code></td><td><code>.129</code></td></tr>
+  </tbody>
+</table>
+
+<h2>Παράδειγμα — PCs στο παράρτημα Αθήνας (LAN 200.1.100.0/24)</h2>
+
+<table>
+  <thead><tr><th>PC</th><th>IP</th><th>Mask</th><th>Gateway</th></tr></thead>
+  <tbody>
+    <tr><td>PC-Λογιστήριο-ATH</td><td><code>200.1.100.10</code></td><td><code>255.255.255.192</code></td><td><code>200.1.100.1</code></td></tr>
+    <tr><td>PC-Διεύθυνση-ATH</td><td><code>200.1.100.74</code></td><td><code>255.255.255.192</code></td><td><code>200.1.100.65</code></td></tr>
+    <tr><td>PC-SWDev-ATH</td><td><code>200.1.100.138</code></td><td><code>255.255.255.192</code></td><td><code>200.1.100.129</code></td></tr>
+  </tbody>
+</table>
+
+<h2>Επαλήθευση λειτουργίας — screenshots</h2>
+
+<p>Πραγματικά screenshots από το Cisco Packet Tracer που αποδεικνύουν ότι η τοπολογία λειτουργεί σωστά:</p>
+
+<figure style="margin: 18px 0; text-align: center;">
+  <img src="../../final-report/img/screenshot-ospf-route.png" alt="show ip route ospf + show ip ospf neighbor στον R-IOA" style="max-width: 100%; height: auto; border: 1px solid #dde; border-radius: 6px;">
+  <figcaption style="margin-top: 8px; font-size: 13px; color: #666; font-style: italic;">
+    <code>show ip route ospf</code> + <code>show ip ospf neighbor</code> στον R-IOA — όλα τα 15 LAN /26 υποδίκτυα έχουν μάθει μέσω OSPF, με δύο γείτονες σε κατάσταση <strong>FULL</strong> (router-id 2.2.2.2 και 4.4.4.4).
+  </figcaption>
+</figure>
+
+<figure style="margin: 18px 0; text-align: center;">
+  <img src="../../final-report/img/screenshot-ping-success.png" alt="Επιτυχές ping cross-site από Χανιά προς WebServer Ιωαννίνων" style="max-width: 100%; height: auto; border: 1px solid #dde; border-radius: 6px;">
+  <figcaption style="margin-top: 8px; font-size: 13px; color: #666; font-style: italic;">
+    Επιτυχές ping από <code>PC-CHA-Λογ</code> προς <code>WebServer @ 200.1.60.10</code> (Ιωάννινα) — 3/4 replies, TTL=125 (δύο router hops μέσω OSPF). Αποδεικνύει end-to-end συνδεσιμότητα μεταξύ παραρτημάτων.
+  </figcaption>
+</figure>
+
+<figure style="margin: 18px 0; text-align: center;">
+  <img src="../../final-report/img/screenshot-trunk.png" alt="show interfaces trunk στον SW-PAT" style="max-width: 100%; height: auto; border: 1px solid #dde; border-radius: 6px;">
+  <figcaption style="margin-top: 8px; font-size: 13px; color: #666; font-style: italic;">
+    <code>show interfaces trunk</code> στον SW-PAT — η θύρα <code>Fa0/24</code> είναι trunk με encapsulation 802.1q, και επιτρέπει τα VLAN 10, 20, 30 (router-on-a-stick configuration).
+  </figcaption>
+</figure>
+  </main>
+  <footer>
+    <a href="#top">↑ επιστροφή στην κορυφή</a> ·
+    <a href="../../index.html">πίσω στο κεντρικό index</a> ·
+    Σχετικά: <a href="R-ATH.html">R-ATH.txt</a> · <a href="R-CHA.html">R-CHA.txt</a> · <a href="R-IOA.html">R-IOA.txt</a> · <a href="R-PAT.html">R-PAT.txt</a> · <a href="R-THE.html">R-THE.txt</a>
+  </footer>
+</body>
+</html>

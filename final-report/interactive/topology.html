@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<title>Δικτυακή Τοπολογία</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #1a1a2e;
+  color: #e0e0e0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+h1 {
+  text-align: center;
+  padding: 8px 0;
+  font-size: 14px;
+  background: #0f1629;
+  flex-shrink: 0;
+  border-bottom: 1px solid #2a3a5c;
+  letter-spacing: 0.03em;
+}
+.banner {
+  background: #1c4d2a; color: #fff;
+  padding: 5px 12px; font-size: 11.5px;
+  border-bottom: 1px solid #2a3a5c; text-align: center;
+}
+#main { display: flex; flex: 1; overflow: hidden; }
+#wrap { flex: 1; overflow: auto; background: #f5f7fa; cursor: grab; user-select: none; }
+svg { display: block; background: #f5f7fa; }
+#panel {
+  width: 320px;
+  background: #16213e;
+  border-left: 2px solid #243760;
+  padding: 16px;
+  overflow-y: auto;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+#panel h2 { font-size: 16px; color: #6ec5ff; margin-bottom: 8px; border-bottom: 1px solid #2a3a5c; padding-bottom: 4px; }
+#panel .desc { margin: 6px 0 10px 0; line-height: 1.5; color: #d8dbe2; }
+#panel .props { font-size: 12px; }
+#panel .props .row { display: flex; padding: 3px 0; border-bottom: 1px dotted #243760; }
+#panel .props .k { color: #93c5fd; flex: 0 0 110px; }
+#panel .props .v { color: #fff; flex: 1; word-break: break-word; }
+
+/* Hover/select transitions */
+.node circle, .node rect, .node ellipse { transition: filter 0.15s, stroke-width 0.15s; cursor: pointer; }
+.node:hover circle, .node:hover rect, .node:hover ellipse { filter: brightness(1.15); stroke-width: 3; }
+.node.selected circle, .node.selected rect, .node.selected ellipse { stroke: #ffd479 !important; stroke-width: 4 !important; }
+.arrow path, .arrow line { transition: stroke-width 0.15s, opacity 0.15s; cursor: pointer; }
+.arrow:hover path, .arrow:hover line { stroke-width: 5; }
+.arrow.selected path, .arrow.selected line { stroke: #ffd479 !important; stroke-width: 4 !important; }
+.arrow rect { cursor: pointer; }
+
+/* Text classes */
+.zt { font-size: 12px; fill: #555; font-weight: bold; letter-spacing: 0.04em; pointer-events: none; }
+.lt { font-size: 11px; fill: #888; font-weight: bold; pointer-events: none; }
+.nt { font-size: 12px; pointer-events: none; }
+.ns { font-size: 10px; pointer-events: none; }
+.at { font-size: 11px; fill: #333; font-weight: bold; pointer-events: none; }
+</style>
+</head>
+<body>
+<nav class="topnav" style="padding:8px 24px;background:#f7f9fc;border-bottom:1px solid #ccc;font-size:13px;display:flex;gap:18px;">
+  <a href="index.html" style="color:#1a4f8a;text-decoration:none;">⬅ Interactive Diagrams</a>
+  <a href="../report.html" style="color:#1a4f8a;text-decoration:none;">📄 Αναφορά</a>
+  <a href="https://github.com/idpe19389308/papi-net" style="color:#1a4f8a;text-decoration:none;">🐙 GitHub</a>
+</nav>
+<h1>Δικτυακή Τοπολογία — PAPI-net (5 παραρτήματα) · κάντε κλικ σε router / σύνδεση / LAN / VLAN</h1>
+<div class="banner">
+  <b>Άσκηση:</b> Ελένη Διαμάντη — 5 παραρτήματα, OSPF area 0, 3 VLAN ανά παράρτημα (/26), WAN /30 P2P, server-host Ιωάννινα
+</div>
+
+<div id="main">
+<div id="wrap">
+<svg viewBox="0 0 1400 810" width="1400" height="810" xmlns="http://www.w3.org/2000/svg">
+  <!-- Removed 4 unreferenced <marker> defs (ah, ah-g, ah-r, ah-p) on 2026-05-20 — dead code -->
+  <defs></defs>
+
+  <!-- Title strip -->
+  <text x="700" y="32" text-anchor="middle" class="zt" style="font-size:15px;fill:#2c3e50">
+    Δικτυακή Τοπολογία — 5 παραρτήματα · OSPF area 0 · 3 VLAN/παράρτημα
+  </text>
+
+  <!-- ════════════════ WAN LINKS (drawn BEFORE routers) ════════════════ -->
+
+  <!-- WAN IOA ↔ THE  (top horizontal) -->
+  <g class="arrow" data-key="L-IOA-THE">
+    <line x1="380" y1="200" x2="1020" y2="200" stroke="#666" stroke-width="3"/>
+    <rect x="640" y="178" width="120" height="22" rx="4" fill="white" stroke="#666" stroke-width="1.2"/>
+    <text x="700" y="194" class="at" text-anchor="middle">200.1.70.0/30</text>
+  </g>
+
+  <!-- WAN IOA ↔ PAT  (left vertical) -->
+  <g class="arrow" data-key="L-IOA-PAT">
+    <line x1="350" y1="230" x2="350" y2="470" stroke="#666" stroke-width="3"/>
+    <rect x="290" y="338" width="120" height="22" rx="4" fill="white" stroke="#666" stroke-width="1.2"/>
+    <text x="350" y="354" class="at" text-anchor="middle">200.1.50.0/30</text>
+  </g>
+
+  <!-- WAN THE ↔ ATH  (right vertical) -->
+  <g class="arrow" data-key="L-THE-ATH">
+    <line x1="1050" y1="230" x2="1050" y2="470" stroke="#666" stroke-width="3"/>
+    <rect x="990" y="338" width="120" height="22" rx="4" fill="white" stroke="#666" stroke-width="1.2"/>
+    <text x="1050" y="354" class="at" text-anchor="middle">200.1.90.0/30</text>
+  </g>
+
+  <!-- WAN ATH ↔ CHA  (diagonal down-left) -->
+  <g class="arrow" data-key="L-ATH-CHA">
+    <line x1="1025" y1="528" x2="730" y2="680" stroke="#666" stroke-width="3"/>
+    <rect x="820" y="595" width="120" height="22" rx="4" fill="white" stroke="#666" stroke-width="1.2"/>
+    <text x="880" y="611" class="at" text-anchor="middle">200.1.20.0/30</text>
+  </g>
+
+  <!-- WAN PAT ↔ CHA  (diagonal down-right) -->
+  <g class="arrow" data-key="L-PAT-CHA">
+    <line x1="375" y1="528" x2="670" y2="680" stroke="#666" stroke-width="3"/>
+    <rect x="460" y="595" width="120" height="22" rx="4" fill="white" stroke="#666" stroke-width="1.2"/>
+    <text x="520" y="611" class="at" text-anchor="middle">200.1.30.0/30</text>
+  </g>
+
+  <!-- ════════════════ LAN CLOUDS (drawn before routers, behind VLAN boxes) ════════════════ -->
+
+  <!-- LAN IOA (upper-left, hosts Web + File servers) -->
+  <g class="node" data-key="LAN-IOA">
+    <ellipse cx="170" cy="200" rx="95" ry="44" fill="#f9e0a8" stroke="#a36a0d" stroke-width="2"/>
+    <text x="170" y="195" text-anchor="middle" class="nt" fill="#7a4f08" font-weight="bold">LAN Ιωαννίνων</text>
+    <text x="170" y="212" text-anchor="middle" class="ns" fill="#7a4f08">200.1.60.0/24 · gw .1</text>
+  </g>
+  <line x1="265" y1="200" x2="320" y2="200" stroke="#a36a0d" stroke-width="2"/>
+
+  <!-- LAN THE (upper-right) -->
+  <g class="node" data-key="LAN-THE">
+    <ellipse cx="1230" cy="200" rx="95" ry="44" fill="#f9e0a8" stroke="#a36a0d" stroke-width="2"/>
+    <text x="1230" y="195" text-anchor="middle" class="nt" fill="#7a4f08" font-weight="bold">LAN Θεσσαλονίκης</text>
+    <text x="1230" y="212" text-anchor="middle" class="ns" fill="#7a4f08">200.1.80.0/24 · gw .1</text>
+  </g>
+  <line x1="1080" y1="200" x2="1135" y2="200" stroke="#a36a0d" stroke-width="2"/>
+
+  <!-- LAN ATH (lower-right) -->
+  <g class="node" data-key="LAN-ATH">
+    <ellipse cx="1230" cy="500" rx="95" ry="44" fill="#f9e0a8" stroke="#a36a0d" stroke-width="2"/>
+    <text x="1230" y="495" text-anchor="middle" class="nt" fill="#7a4f08" font-weight="bold">LAN Αθήνας</text>
+    <text x="1230" y="512" text-anchor="middle" class="ns" fill="#7a4f08">200.1.100.0/24 · gw .1</text>
+  </g>
+  <line x1="1080" y1="500" x2="1135" y2="500" stroke="#a36a0d" stroke-width="2"/>
+
+  <!-- LAN PAT (lower-left) -->
+  <g class="node" data-key="LAN-PAT">
+    <ellipse cx="170" cy="500" rx="95" ry="44" fill="#f9e0a8" stroke="#a36a0d" stroke-width="2"/>
+    <text x="170" y="495" text-anchor="middle" class="nt" fill="#7a4f08" font-weight="bold">LAN Πάτρας</text>
+    <text x="170" y="512" text-anchor="middle" class="ns" fill="#7a4f08">200.1.40.0/24 · gw .1</text>
+  </g>
+  <line x1="265" y1="500" x2="320" y2="500" stroke="#a36a0d" stroke-width="2"/>
+
+  <!-- LAN CHA (bottom-center) -->
+  <g class="node" data-key="LAN-CHA">
+    <ellipse cx="700" cy="780" rx="95" ry="22" fill="#f9e0a8" stroke="#a36a0d" stroke-width="2"/>
+    <text x="700" y="776" text-anchor="middle" class="nt" fill="#7a4f08" font-weight="bold">LAN Χανίων</text>
+    <text x="700" y="792" text-anchor="middle" class="ns" fill="#7a4f08">200.1.10.0/24 · gw .1</text>
+  </g>
+  <line x1="700" y1="730" x2="700" y2="758" stroke="#a36a0d" stroke-width="2"/>
+
+  <!-- ════════════════ VLAN BOXES (3 per branch, color-coded) ════════════════ -->
+
+  <!-- IOA VLANs (above the IOA LAN cloud) -->
+  <g class="node" data-key="VLAN-IOA-10">
+    <rect x="40" y="80" width="80" height="30" rx="4" fill="#27ae60" stroke="#1e8449" stroke-width="1.5"/>
+    <text x="80" y="95" text-anchor="middle" class="nt" fill="white" font-weight="bold">VLAN 10</text>
+    <text x="80" y="106" text-anchor="middle" class="ns" fill="white">Λογιστήριο</text>
+  </g>
+  <g class="node" data-key="VLAN-IOA-20">
+    <rect x="130" y="80" width="80" height="30" rx="4" fill="#f39c12" stroke="#b9770e" stroke-width="1.5"/>
+    <text x="170" y="95" text-anchor="middle" class="nt" fill="white" font-weight="bold">VLAN 20</text>
+    <text x="170" y="106" text-anchor="middle" class="ns" fill="white">Διεύθυνση</text>
+  </g>
+  <g class="node" data-key="VLAN-IOA-30">
+    <rect x="220" y="80" width="80" height="30" rx="4" fill="#8e44ad" stroke="#6c3483" stroke-width="1.5"/>
+    <text x="260" y="95" text-anchor="middle" class="nt" fill="white" font-weight="bold">VLAN 30</text>
+    <text x="260" y="106" text-anchor="middle" class="ns" fill="white">SW Devs</text>
+  </g>
+  <line x1="170" y1="110" x2="170" y2="156" stroke="#a36a0d" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+  <!-- THE VLANs (above the THE LAN cloud) -->
+  <g class="node" data-key="VLAN-THE-10">
+    <rect x="1100" y="80" width="80" height="30" rx="4" fill="#27ae60" stroke="#1e8449" stroke-width="1.5"/>
+    <text x="1140" y="95" text-anchor="middle" class="nt" fill="white" font-weight="bold">VLAN 10</text>
+    <text x="1140" y="106" text-anchor="middle" class="ns" fill="white">Λογιστήριο</text>
+  </g>
+  <g class="node" data-key="VLAN-THE-20">
+    <rect x="1190" y="80" width="80" height="30" rx="4" fill="#f39c12" stroke="#b9770e" stroke-width="1.5"/>
+    <text x="1230" y="95" text-anchor="middle" class="nt" fill="white" font-weight="bold">VLAN 20</text>
+    <text x="1230" y="106" text-anchor="middle" class="ns" fill="white">Διεύθυνση</text>
+  </g>
+  <g class="node" data-key="VLAN-THE-30">
+    <rect x="1280" y="80" width="80" height="30" rx="4" fill="#8e44ad" stroke="#6c3483" stroke-width="1.5"/>
+    <text x="1320" y="95" text-anchor="middle" class="nt" fill="white" font-weight="bold">VLAN 30</text>
+    <text x="1320" y="106" text-anchor="middle" class="ns" fill="white">SW Devs</text>
+  </g>
+  <line x1="1230" y1="110" x2="1230" y2="156" stroke="#a36a0d" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+  <!-- ATH VLANs (below the ATH LAN cloud) -->
+  <g class="node" data-key="VLAN-ATH-10">
+    <rect x="1100" y="560" width="80" height="30" rx="4" fill="#27ae60" stroke="#1e8449" stroke-width="1.5"/>
+    <text x="1140" y="575" text-anchor="middle" class="nt" fill="white" font-weight="bold">VLAN 10</text>
+    <text x="1140" y="586" text-anchor="middle" class="ns" fill="white">Λογιστήριο</text>
+  </g>
+  <g class="node" data-key="VLAN-ATH-20">
+    <rect x="1190" y="560" width="80" height="30" rx="4" fill="#f39c12" stroke="#b9770e" stroke-width="1.5"/>
+    <text x="1230" y="575" text-anchor="middle" class="nt" fill="white" font-weight="bold">VLAN 20</text>
+    <text x="1230" y="586" text-anchor="middle" class="ns" fill="white">Διεύθυνση</text>
+  </g>
+  <g class="node" data-key="VLAN-ATH-30">
+    <rect x="1280" y="560" width="80" height="30" rx="4" fill="#8e44ad" stroke="#6c3483" stroke-width="1.5"/>
+    <text x="1320" y="575" text-anchor="middle" class="nt" fill="white" font-weight="bold">VLAN 30</text>
+    <text x="1320" y="586" text-anchor="middle" class="ns" fill="white">SW Devs</text>
+  </g>
+  <line x1="1230" y1="544" x2="1230" y2="560" stroke="#a36a0d" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+  <!-- PAT VLANs (below the PAT LAN cloud) -->
+  <g class="node" data-key="VLAN-PAT-10">
+    <rect x="40" y="560" width="80" height="30" rx="4" fill="#27ae60" stroke="#1e8449" stroke-width="1.5"/>
+    <text x="80" y="575" text-anchor="middle" class="nt" fill="white" font-weight="bold">VLAN 10</text>
+    <text x="80" y="586" text-anchor="middle" class="ns" fill="white">Λογιστήριο</text>
+  </g>
+  <g class="node" data-key="VLAN-PAT-20">
+    <rect x="130" y="560" width="80" height="30" rx="4" fill="#f39c12" stroke="#b9770e" stroke-width="1.5"/>
+    <text x="170" y="575" text-anchor="middle" class="nt" fill="white" font-weight="bold">VLAN 20</text>
+    <text x="170" y="586" text-anchor="middle" class="ns" fill="white">Διεύθυνση</text>
+  </g>
+  <g class="node" data-key="VLAN-PAT-30">
+    <rect x="220" y="560" width="80" height="30" rx="4" fill="#8e44ad" stroke="#6c3483" stroke-width="1.5"/>
+    <text x="260" y="575" text-anchor="middle" class="nt" fill="white" font-weight="bold">VLAN 30</text>
+    <text x="260" y="586" text-anchor="middle" class="ns" fill="white">SW Devs</text>
+  </g>
+  <line x1="170" y1="544" x2="170" y2="560" stroke="#a36a0d" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+  <!-- CHA VLANs (right of the CHA LAN cloud) -->
+  <g class="node" data-key="VLAN-CHA-10">
+    <rect x="820" y="743" width="80" height="22" rx="4" fill="#27ae60" stroke="#1e8449" stroke-width="1.5"/>
+    <text x="860" y="758" text-anchor="middle" class="nt" fill="white" font-weight="bold" style="font-size:10.5px">VLAN 10 Λογιστ.</text>
+  </g>
+  <g class="node" data-key="VLAN-CHA-20">
+    <rect x="910" y="743" width="80" height="22" rx="4" fill="#f39c12" stroke="#b9770e" stroke-width="1.5"/>
+    <text x="950" y="758" text-anchor="middle" class="nt" fill="white" font-weight="bold" style="font-size:10.5px">VLAN 20 Διεύθ.</text>
+  </g>
+  <g class="node" data-key="VLAN-CHA-30">
+    <rect x="1000" y="743" width="80" height="22" rx="4" fill="#8e44ad" stroke="#6c3483" stroke-width="1.5"/>
+    <text x="1040" y="758" text-anchor="middle" class="nt" fill="white" font-weight="bold" style="font-size:10.5px">VLAN 30 SW Devs</text>
+  </g>
+  <line x1="795" y1="780" x2="820" y2="754" stroke="#a36a0d" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+  <!-- ════════════════ SERVERS (Web + File) attached to IOA LAN ════════════════ -->
+  <g class="node" data-key="SRV-WEB">
+    <rect x="50" y="260" width="100" height="40" rx="4" fill="#34495e" stroke="#1c2833" stroke-width="1.5"/>
+    <text x="100" y="278" text-anchor="middle" class="nt" fill="white" font-weight="bold">Web Server</text>
+    <text x="100" y="293" text-anchor="middle" class="ns" fill="#bdc3c7">PAPI-net app</text>
+  </g>
+  <line x1="100" y1="260" x2="135" y2="240" stroke="#a36a0d" stroke-width="1.5"/>
+
+  <g class="node" data-key="SRV-FILE">
+    <rect x="190" y="260" width="100" height="40" rx="4" fill="#34495e" stroke="#1c2833" stroke-width="1.5"/>
+    <text x="240" y="278" text-anchor="middle" class="nt" fill="white" font-weight="bold">File Server</text>
+    <text x="240" y="293" text-anchor="middle" class="ns" fill="#bdc3c7">κοινόχρηστα</text>
+  </g>
+  <line x1="240" y1="260" x2="205" y2="240" stroke="#a36a0d" stroke-width="1.5"/>
+
+  <!-- ════════════════ ROUTERS (5 circles) ════════════════ -->
+
+  <g class="node" data-key="R-IOA">
+    <circle cx="350" cy="200" r="30" fill="#2980b9" stroke="#1a5276" stroke-width="2.5"/>
+    <text x="350" y="197" text-anchor="middle" class="nt" fill="white" font-weight="bold">R-IOA</text>
+    <text x="350" y="212" text-anchor="middle" class="ns" fill="#d6eaf8">1.1.1.1</text>
+    <text x="350" y="155" text-anchor="middle" class="lt" fill="#2c3e50">Ιωάννινα</text>
+  </g>
+
+  <g class="node" data-key="R-THE">
+    <circle cx="1050" cy="200" r="30" fill="#2980b9" stroke="#1a5276" stroke-width="2.5"/>
+    <text x="1050" y="197" text-anchor="middle" class="nt" fill="white" font-weight="bold">R-THE</text>
+    <text x="1050" y="212" text-anchor="middle" class="ns" fill="#d6eaf8">2.2.2.2</text>
+    <text x="1050" y="155" text-anchor="middle" class="lt" fill="#2c3e50">Θεσσαλονίκη</text>
+  </g>
+
+  <g class="node" data-key="R-ATH">
+    <circle cx="1050" cy="500" r="30" fill="#2980b9" stroke="#1a5276" stroke-width="2.5"/>
+    <text x="1050" y="497" text-anchor="middle" class="nt" fill="white" font-weight="bold">R-ATH</text>
+    <text x="1050" y="512" text-anchor="middle" class="ns" fill="#d6eaf8">3.3.3.3</text>
+    <text x="1050" y="545" text-anchor="middle" class="lt" fill="#2c3e50">Αθήνα</text>
+  </g>
+
+  <g class="node" data-key="R-PAT">
+    <circle cx="350" cy="500" r="30" fill="#2980b9" stroke="#1a5276" stroke-width="2.5"/>
+    <text x="350" y="497" text-anchor="middle" class="nt" fill="white" font-weight="bold">R-PAT</text>
+    <text x="350" y="512" text-anchor="middle" class="ns" fill="#d6eaf8">4.4.4.4</text>
+    <text x="350" y="545" text-anchor="middle" class="lt" fill="#2c3e50">Πάτρα</text>
+  </g>
+
+  <g class="node" data-key="R-CHA">
+    <circle cx="700" cy="700" r="30" fill="#2980b9" stroke="#1a5276" stroke-width="2.5"/>
+    <text x="700" y="697" text-anchor="middle" class="nt" fill="white" font-weight="bold">R-CHA</text>
+    <text x="700" y="712" text-anchor="middle" class="ns" fill="#d6eaf8">5.5.5.5</text>
+    <text x="700" y="660" text-anchor="middle" class="lt" fill="#2c3e50">Χανιά</text>
+  </g>
+
+  <!-- Legend (bottom-left) -->
+  <g pointer-events="none">
+    <rect x="20" y="640" width="280" height="90" rx="4" fill="white" stroke="#bbb" stroke-width="1"/>
+    <text x="30" y="658" class="lt" fill="#2c3e50">Υπόμνημα</text>
+    <circle cx="40" cy="675" r="6" fill="#2980b9"/>
+    <text x="52" y="679" class="ns" fill="#333">Router (OSPF area 0)</text>
+    <ellipse cx="40" cy="694" rx="9" ry="5" fill="#f9e0a8" stroke="#a36a0d"/>
+    <text x="52" y="698" class="ns" fill="#333">LAN παραρτήματος /24</text>
+    <rect x="32" y="708" width="16" height="10" fill="#27ae60"/>
+    <text x="52" y="717" class="ns" fill="#333">VLAN 10/20/30 (/26 το καθένα)</text>
+  </g>
+
+</svg>
+</div>
+
+<div id="panel">
+<h2 id="panel-title">Κάντε κλικ σε στοιχείο</h2>
+<div class="desc" id="panel-desc">Κάντε κλικ σε router, σύνδεση WAN, LAN, ή VLAN για λεπτομέρειες (διευθύνσεις, μάσκες, IDs). Σύρετε τον καμβά για μετακίνηση.</div>
+<div class="props" id="panel-props"></div>
+</div>
+
+</div>
+
+<script>
+const data = {
+  // ════════════════ ROUTERS ════════════════
+  "R-IOA": {
+    title: "R-IOA — Δρομολογητής Ιωαννίνων",
+    desc: "Layer-3 δρομολογητής που εξυπηρετεί το LAN των Ιωαννίνων και συνδέεται με Θεσσαλονίκη και Πάτρα. Φιλοξενεί τους κεντρικούς servers (Web + File) στο τοπικό του LAN.",
+    props: {
+      "Router-ID":   "1.1.1.1",
+      "LAN":         "200.1.60.0/24 (gateway .1)",
+      "WAN ↔ THE":   "200.1.70.0/30 (.1)",
+      "WAN ↔ PAT":   "200.1.50.0/30 (.2)",
+      "OSPF area":   "0",
+      "VLAN":        "10 Λογιστήριο · 20 Διεύθυνση · 30 SW Devs",
+      "Server-host": "Web + File server στο LAN"
+    }
+  },
+  "R-THE": {
+    title: "R-THE — Δρομολογητής Θεσσαλονίκης",
+    desc: "Layer-3 δρομολογητής παραρτήματος Θεσσαλονίκης. Συνδέεται με Ιωάννινα (βορρά) και Αθήνα (κάθετα προς νότο).",
+    props: {
+      "Router-ID":   "2.2.2.2",
+      "LAN":         "200.1.80.0/24 (gateway .1)",
+      "WAN ↔ IOA":   "200.1.70.0/30 (.2)",
+      "WAN ↔ ATH":   "200.1.90.0/30 (.1)",
+      "OSPF area":   "0",
+      "VLAN":        "10 Λογιστήριο · 20 Διεύθυνση · 30 SW Devs"
+    }
+  },
+  "R-ATH": {
+    title: "R-ATH — Δρομολογητής Αθήνας",
+    desc: "Layer-3 δρομολογητής παραρτήματος Αθήνας. Συνδέεται με Θεσσαλονίκη (πάνω) και Χανιά (κάτω-αριστερά).",
+    props: {
+      "Router-ID":   "3.3.3.3",
+      "LAN":         "200.1.100.0/24 (gateway .1)",
+      "WAN ↔ THE":   "200.1.90.0/30 (.2)",
+      "WAN ↔ CHA":   "200.1.20.0/30 (.2)",
+      "OSPF area":   "0",
+      "VLAN":        "10 Λογιστήριο · 20 Διεύθυνση · 30 SW Devs"
+    }
+  },
+  "R-PAT": {
+    title: "R-PAT — Δρομολογητής Πάτρας",
+    desc: "Layer-3 δρομολογητής παραρτήματος Πάτρας. Συνδέεται με Ιωάννινα (πάνω) και Χανιά (κάτω-δεξιά).",
+    props: {
+      "Router-ID":   "4.4.4.4",
+      "LAN":         "200.1.40.0/24 (gateway .1)",
+      "WAN ↔ IOA":   "200.1.50.0/30 (.1)",
+      "WAN ↔ CHA":   "200.1.30.0/30 (.2)",
+      "OSPF area":   "0",
+      "VLAN":        "10 Λογιστήριο · 20 Διεύθυνση · 30 SW Devs"
+    }
+  },
+  "R-CHA": {
+    title: "R-CHA — Δρομολογητής Χανίων",
+    desc: "Layer-3 δρομολογητής παραρτήματος Χανίων. Κάτω σημείο του δικτύου, συνδέεται με Αθήνα και Πάτρα.",
+    props: {
+      "Router-ID":   "5.5.5.5",
+      "LAN":         "200.1.10.0/24 (gateway .1)",
+      "WAN ↔ ATH":   "200.1.20.0/30 (.1)",
+      "WAN ↔ PAT":   "200.1.30.0/30 (.1)",
+      "OSPF area":   "0",
+      "VLAN":        "10 Λογιστήριο · 20 Διεύθυνση · 30 SW Devs"
+    }
+  },
+
+  // ════════════════ WAN LINKS (/30) ════════════════
+  "L-IOA-THE": {
+    title: "Σύνδεση Ιωάννινα ↔ Θεσσαλονίκη",
+    desc: "WAN σύνδεσμος point-to-point μεταξύ δρομολογητών.",
+    props: { "Subnet":"200.1.70.0/30", "IOA IP":"200.1.70.1", "THE IP":"200.1.70.2", "Mask":"255.255.255.252", "Hosts":"2", "Encap":"HDLC/PPP", "OSPF cost":"default 64" }
+  },
+  "L-IOA-PAT": {
+    title: "Σύνδεση Ιωάννινα ↔ Πάτρα",
+    desc: "WAN σύνδεσμος point-to-point μεταξύ δρομολογητών.",
+    props: { "Subnet":"200.1.50.0/30", "IOA IP":"200.1.50.2", "PAT IP":"200.1.50.1", "Mask":"255.255.255.252", "Hosts":"2", "Encap":"HDLC/PPP", "OSPF cost":"default 64" }
+  },
+  "L-THE-ATH": {
+    title: "Σύνδεση Θεσσαλονίκη ↔ Αθήνα",
+    desc: "WAN σύνδεσμος point-to-point μεταξύ δρομολογητών.",
+    props: { "Subnet":"200.1.90.0/30", "THE IP":"200.1.90.1", "ATH IP":"200.1.90.2", "Mask":"255.255.255.252", "Hosts":"2", "Encap":"HDLC/PPP", "OSPF cost":"default 64" }
+  },
+  "L-ATH-CHA": {
+    title: "Σύνδεση Αθήνα ↔ Χανιά",
+    desc: "WAN σύνδεσμος point-to-point μεταξύ δρομολογητών.",
+    props: { "Subnet":"200.1.20.0/30", "CHA IP":"200.1.20.1", "ATH IP":"200.1.20.2", "Mask":"255.255.255.252", "Hosts":"2", "Encap":"HDLC/PPP", "OSPF cost":"default 64" }
+  },
+  "L-PAT-CHA": {
+    title: "Σύνδεση Πάτρα ↔ Χανιά",
+    desc: "WAN σύνδεσμος point-to-point μεταξύ δρομολογητών.",
+    props: { "Subnet":"200.1.30.0/30", "PAT IP":"200.1.30.2", "CHA IP":"200.1.30.1", "Mask":"255.255.255.252", "Hosts":"2", "Encap":"HDLC/PPP", "OSPF cost":"default 64" }
+  },
+
+  // ════════════════ LAN CLOUDS (/24) ════════════════
+  "LAN-IOA": {
+    title: "LAN Ιωαννίνων — 200.1.60.0/24",
+    desc: "Εσωτερικό δίκτυο παραρτήματος Ιωαννίνων. Φιλοξενεί Web server και File server που εξυπηρετούν όλα τα παραρτήματα μέσω OSPF.",
+    props: { "Network":"200.1.60.0/24", "Mask":"255.255.255.0", "Hosts":"254 (πριν τα VLAN) → 186 (3×62 μετά)", "VLANs":"10/20/30 (×/26)", "Φυσικός switch":"SW-IOA", "Servers":"Web + File στο /24" }
+  },
+  "LAN-THE": {
+    title: "LAN Θεσσαλονίκης — 200.1.80.0/24",
+    desc: "Εσωτερικό δίκτυο παραρτήματος Θεσσαλονίκης. Σπασμένο σε 3 VLAN /26 (10/20/30) με reserved /26 για μελλοντική χρήση.",
+    props: { "Network":"200.1.80.0/24", "Mask":"255.255.255.0", "Hosts":"254 → 186 μετά τα VLAN", "VLANs":"10/20/30", "Φυσικός switch":"SW-THE" }
+  },
+  "LAN-ATH": {
+    title: "LAN Αθήνας — 200.1.100.0/24",
+    desc: "Εσωτερικό δίκτυο παραρτήματος Αθήνας. Σπασμένο σε 3 VLAN /26 (10/20/30) με reserved /26 για μελλοντική χρήση.",
+    props: { "Network":"200.1.100.0/24", "Mask":"255.255.255.0", "Hosts":"254 → 186 μετά τα VLAN", "VLANs":"10/20/30", "Φυσικός switch":"SW-ATH" }
+  },
+  "LAN-PAT": {
+    title: "LAN Πάτρας — 200.1.40.0/24",
+    desc: "Εσωτερικό δίκτυο παραρτήματος Πάτρας. Σπασμένο σε 3 VLAN /26 (10/20/30) με reserved /26 για μελλοντική χρήση.",
+    props: { "Network":"200.1.40.0/24", "Mask":"255.255.255.0", "Hosts":"254 → 186 μετά τα VLAN", "VLANs":"10/20/30", "Φυσικός switch":"SW-PAT" }
+  },
+  "LAN-CHA": {
+    title: "LAN Χανίων — 200.1.10.0/24",
+    desc: "Εσωτερικό δίκτυο παραρτήματος Χανίων. Σπασμένο σε 3 VLAN /26 (10/20/30) με reserved /26 για μελλοντική χρήση.",
+    props: { "Network":"200.1.10.0/24", "Mask":"255.255.255.0", "Hosts":"254 → 186 μετά τα VLAN", "VLANs":"10/20/30", "Φυσικός switch":"SW-CHA" }
+  },
+
+  // ════════════════ VLANs — Ιωάννινα ════════════════
+  "VLAN-IOA-10": {
+    title: "Ιωάννινα · VLAN 10 — Λογιστήριο",
+    desc: "Subnet τμήματος Λογιστηρίου στο παράρτημα Ιωαννίνων.",
+    props: { "Network":"200.1.60.0/26", "Mask":"255.255.255.192", "Gateway":"200.1.60.1 (R-IOA g0/0.10)", "Hosts":"200.1.60.1 – .62 (62 hosts)", "VLAN ID":"10", "Sw ports":"Fa0/1 access (Fa0/24 trunk προς R)" }
+  },
+  "VLAN-IOA-20": {
+    title: "Ιωάννινα · VLAN 20 — Διεύθυνση",
+    desc: "Subnet τμήματος Διεύθυνσης στο παράρτημα Ιωαννίνων.",
+    props: { "Network":"200.1.60.64/26", "Mask":"255.255.255.192", "Gateway":"200.1.60.65 (R-IOA g0/0.20)", "Hosts":"200.1.60.65 – .126 (62 hosts)", "VLAN ID":"20", "Sw ports":"Fa0/2 access (Fa0/24 trunk προς R)" }
+  },
+  "VLAN-IOA-30": {
+    title: "Ιωάννινα · VLAN 30 — SW Developers",
+    desc: "Subnet τμήματος Software Developers στο παράρτημα Ιωαννίνων.",
+    props: { "Network":"200.1.60.128/26", "Mask":"255.255.255.192", "Gateway":"200.1.60.129 (R-IOA g0/0.30)", "Hosts":"200.1.60.129 – .190 (62 hosts)", "VLAN ID":"30", "Sw ports":"Fa0/3 access (Fa0/24 trunk προς R)" }
+  },
+
+  // ════════════════ VLANs — Θεσσαλονίκη ════════════════
+  "VLAN-THE-10": {
+    title: "Θεσσαλονίκη · VLAN 10 — Λογιστήριο",
+    desc: "Subnet τμήματος Λογιστηρίου στο παράρτημα Θεσσαλονίκης.",
+    props: { "Network":"200.1.80.0/26", "Mask":"255.255.255.192", "Gateway":"200.1.80.1 (R-THE g0/0.10)", "Hosts":"200.1.80.1 – .62 (62 hosts)", "VLAN ID":"10", "Sw ports":"Fa0/1 access (Fa0/24 trunk προς R)" }
+  },
+  "VLAN-THE-20": {
+    title: "Θεσσαλονίκη · VLAN 20 — Διεύθυνση",
+    desc: "Subnet τμήματος Διεύθυνσης στο παράρτημα Θεσσαλονίκης.",
+    props: { "Network":"200.1.80.64/26", "Mask":"255.255.255.192", "Gateway":"200.1.80.65 (R-THE g0/0.20)", "Hosts":"200.1.80.65 – .126 (62 hosts)", "VLAN ID":"20", "Sw ports":"Fa0/2 access (Fa0/24 trunk προς R)" }
+  },
+  "VLAN-THE-30": {
+    title: "Θεσσαλονίκη · VLAN 30 — SW Developers",
+    desc: "Subnet τμήματος Software Developers στο παράρτημα Θεσσαλονίκης.",
+    props: { "Network":"200.1.80.128/26", "Mask":"255.255.255.192", "Gateway":"200.1.80.129 (R-THE g0/0.30)", "Hosts":"200.1.80.129 – .190 (62 hosts)", "VLAN ID":"30", "Sw ports":"Fa0/3 access (Fa0/24 trunk προς R)" }
+  },
+
+  // ════════════════ VLANs — Αθήνα ════════════════
+  "VLAN-ATH-10": {
+    title: "Αθήνα · VLAN 10 — Λογιστήριο",
+    desc: "Subnet τμήματος Λογιστηρίου στο παράρτημα Αθήνας.",
+    props: { "Network":"200.1.100.0/26", "Mask":"255.255.255.192", "Gateway":"200.1.100.1 (R-ATH g0/0.10)", "Hosts":"200.1.100.1 – .62 (62 hosts)", "VLAN ID":"10", "Sw ports":"Fa0/1 access (Fa0/24 trunk προς R)" }
+  },
+  "VLAN-ATH-20": {
+    title: "Αθήνα · VLAN 20 — Διεύθυνση",
+    desc: "Subnet τμήματος Διεύθυνσης στο παράρτημα Αθήνας.",
+    props: { "Network":"200.1.100.64/26", "Mask":"255.255.255.192", "Gateway":"200.1.100.65 (R-ATH g0/0.20)", "Hosts":"200.1.100.65 – .126 (62 hosts)", "VLAN ID":"20", "Sw ports":"Fa0/2 access (Fa0/24 trunk προς R)" }
+  },
+  "VLAN-ATH-30": {
+    title: "Αθήνα · VLAN 30 — SW Developers",
+    desc: "Subnet τμήματος Software Developers στο παράρτημα Αθήνας.",
+    props: { "Network":"200.1.100.128/26", "Mask":"255.255.255.192", "Gateway":"200.1.100.129 (R-ATH g0/0.30)", "Hosts":"200.1.100.129 – .190 (62 hosts)", "VLAN ID":"30", "Sw ports":"Fa0/3 access (Fa0/24 trunk προς R)" }
+  },
+
+  // ════════════════ VLANs — Πάτρα ════════════════
+  "VLAN-PAT-10": {
+    title: "Πάτρα · VLAN 10 — Λογιστήριο",
+    desc: "Subnet τμήματος Λογιστηρίου στο παράρτημα Πάτρας.",
+    props: { "Network":"200.1.40.0/26", "Mask":"255.255.255.192", "Gateway":"200.1.40.1 (R-PAT g0/0.10)", "Hosts":"200.1.40.1 – .62 (62 hosts)", "VLAN ID":"10", "Sw ports":"Fa0/1 access (Fa0/24 trunk προς R)" }
+  },
+  "VLAN-PAT-20": {
+    title: "Πάτρα · VLAN 20 — Διεύθυνση",
+    desc: "Subnet τμήματος Διεύθυνσης στο παράρτημα Πάτρας.",
+    props: { "Network":"200.1.40.64/26", "Mask":"255.255.255.192", "Gateway":"200.1.40.65 (R-PAT g0/0.20)", "Hosts":"200.1.40.65 – .126 (62 hosts)", "VLAN ID":"20", "Sw ports":"Fa0/2 access (Fa0/24 trunk προς R)" }
+  },
+  "VLAN-PAT-30": {
+    title: "Πάτρα · VLAN 30 — SW Developers",
+    desc: "Subnet τμήματος Software Developers στο παράρτημα Πάτρας.",
+    props: { "Network":"200.1.40.128/26", "Mask":"255.255.255.192", "Gateway":"200.1.40.129 (R-PAT g0/0.30)", "Hosts":"200.1.40.129 – .190 (62 hosts)", "VLAN ID":"30", "Sw ports":"Fa0/3 access (Fa0/24 trunk προς R)" }
+  },
+
+  // ════════════════ VLANs — Χανιά ════════════════
+  "VLAN-CHA-10": {
+    title: "Χανιά · VLAN 10 — Λογιστήριο",
+    desc: "Subnet τμήματος Λογιστηρίου στο παράρτημα Χανίων.",
+    props: { "Network":"200.1.10.0/26", "Mask":"255.255.255.192", "Gateway":"200.1.10.1 (R-CHA g0/0.10)", "Hosts":"200.1.10.1 – .62 (62 hosts)", "VLAN ID":"10", "Sw ports":"Fa0/1 access (Fa0/24 trunk προς R)" }
+  },
+  "VLAN-CHA-20": {
+    title: "Χανιά · VLAN 20 — Διεύθυνση",
+    desc: "Subnet τμήματος Διεύθυνσης στο παράρτημα Χανίων.",
+    props: { "Network":"200.1.10.64/26", "Mask":"255.255.255.192", "Gateway":"200.1.10.65 (R-CHA g0/0.20)", "Hosts":"200.1.10.65 – .126 (62 hosts)", "VLAN ID":"20", "Sw ports":"Fa0/2 access (Fa0/24 trunk προς R)" }
+  },
+  "VLAN-CHA-30": {
+    title: "Χανιά · VLAN 30 — SW Developers",
+    desc: "Subnet τμήματος Software Developers στο παράρτημα Χανίων.",
+    props: { "Network":"200.1.10.128/26", "Mask":"255.255.255.192", "Gateway":"200.1.10.129 (R-CHA g0/0.30)", "Hosts":"200.1.10.129 – .190 (62 hosts)", "VLAN ID":"30", "Sw ports":"Fa0/3 access (Fa0/24 trunk προς R)" }
+  },
+
+  // ════════════════ SERVERS ════════════════
+  "SRV-WEB": {
+    title: "Web Server (Ιωάννινα)",
+    desc: "Διακομιστής εφαρμογής PAPI-net στο LAN Ιωαννίνων. Προσβάσιμος από όλα τα VLAN όλων των παραρτημάτων μέσω OSPF.",
+    props: { "Branch":"Ιωάννινα", "Subnet":"εντός 200.1.60.0/24", "Προτεινόμενη IP":"200.1.60.10 (στατική στο VLAN 10 ή σε εξαιρ. host port)", "Υπηρεσία":"HTTP/HTTPS εφαρμογή PAPI-net" }
+  },
+  "SRV-FILE": {
+    title: "File Server (Ιωάννινα)",
+    desc: "Διακομιστής κοινόχρηστων αρχείων της επιχείρησης στο LAN Ιωαννίνων.",
+    props: { "Branch":"Ιωάννινα", "Subnet":"εντός 200.1.60.0/24", "Προτεινόμενη IP":"200.1.60.11", "Υπηρεσία":"SMB/NFS κοινόχρηστα" }
+  }
+};
+
+// ════════════════ SELECTION ════════════════
+const $title = document.getElementById('panel-title');
+const $desc  = document.getElementById('panel-desc');
+const $props = document.getElementById('panel-props');
+
+function select(key) {
+  document.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
+  const node = document.querySelector(`[data-key="${key}"]`);
+  if (node) node.classList.add('selected');
+  const d = data[key];
+  if (!d) return;
+  $title.textContent = d.title;
+  $desc.textContent  = d.desc;
+  $props.innerHTML = Object.entries(d.props || {})
+    .map(([k,v]) => `<div class="row"><div class="k">${k}</div><div class="v">${v}</div></div>`)
+    .join('');
+}
+
+document.querySelectorAll('[data-key]').forEach(el => {
+  el.addEventListener('click', e => { e.stopPropagation(); select(el.dataset.key); });
+});
+
+// ════════════════ DRAG-TO-PAN ════════════════
+let isDown = false, sx = 0, sy = 0, sl = 0, st = 0;
+const wrap = document.getElementById('wrap');
+wrap.addEventListener('mousedown', e => {
+  isDown = true;
+  sx = e.clientX; sy = e.clientY;
+  sl = wrap.scrollLeft; st = wrap.scrollTop;
+  wrap.style.cursor = 'grabbing';
+});
+window.addEventListener('mouseup', () => { isDown = false; wrap.style.cursor = 'grab'; });
+window.addEventListener('mousemove', e => {
+  if (!isDown) return;
+  wrap.scrollLeft = sl - (e.clientX - sx);
+  wrap.scrollTop  = st - (e.clientY - sy);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <title>Απαλλακτική Εργασία — Τεχνολογία Διαδικτύου στην Ψηφιακή Βιομηχανία</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body id="top">
+  <nav class="topnav">
+    <a href="../index.html">🏠 Αρχή</a>
+    <a href="../final-report/report.html">📄 Αναφορά</a>
+    <a href="../final-report/interactive/index.html">🌐 Διαγράμματα</a>
+    <a href="../webapp/README.html">📦 Webapp</a>
+    <a href="https://github.com/idpe19389308/papi-net">🐙 GitHub</a>
+    <a href="../packet-tracer/configs/README.html">🔧 Network</a>
+    <span class="breadcrumb">final-report › report.md</span>
+  </nav>
+  <main>
+<h1
+id="απαλλακτική-εργασία-τεχνολογία-διαδικτύου-στην-ψηφιακή-βιομηχανία">Απαλλακτική
+Εργασία — Τεχνολογία Διαδικτύου στην Ψηφιακή Βιομηχανία</h1>
+<hr />
+<h2 id="εξώφυλλο">1. Εξώφυλλο</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Πεδίο</th>
+<th>Στοιχείο</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Σπουδάστρια</td>
+<td>Ελένη Βασιλική Διαμάντη</td>
+</tr>
+<tr class="even">
+<td>Αριθμός Μητρώου</td>
+<td>19389308</td>
+</tr>
+<tr class="odd">
+<td>Μάθημα</td>
+<td>Τεχνολογία Διαδικτύου στην Ψηφιακή Βιομηχανία</td>
+</tr>
+<tr class="even">
+<td>Διδάσκων</td>
+<td>Δρ. Μιχάλης Ξευγένης</td>
+</tr>
+<tr class="odd">
+<td>Τύπος εργασίας</td>
+<td>Απαλλακτική</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="σύνοψη">2. Σύνοψη</h2>
+<p>Η εργασία εχει δύο παραδοτέα και τη συνοδευτική τεκμηρίωση: (α)
+<strong>Διαδικτυακή εφαρμογή PHP/MariaDB</strong> πάνω σε XAMPP για τη
+<strong>Διαχείριση Παραγγελιών</strong> μιας μικρής επιχείρησης, με 4
+πίνακες, 7 δυναμικές σελίδες και εντολές (PDO prepared statements)· (β)
+<strong>Δικτυακή τοπολογία 5 παραρτημάτων</strong> (Ιωάννινα,
+Θεσσαλονίκη, Αθήνα, Πάτρα, Χανιά) σχεδιασμένη στο Cisco Packet Tracer,
+με υπο-διαίρεση κάθε LAN σε <strong>3 VLAN</strong> (Λογιστήριο,
+Διεύθυνση, Software Developers), δυναμική δρομολόγηση <strong>OSPF area
+0</strong>, <strong>inter-VLAN routing</strong> με router-on-a-stick και
+<strong>ACLs</strong> για τον περιορισμό της επικοινωνίας μεταξύ
+τμημάτων. Επιπλέον απαντώνται τα τρία θεωρητικά ερωτήματα (πλήθος
+υποδικτύων, αριθμός hosts, εύρος διευθύνσεων Θεσσαλονίκης).</p>
+<p>Τα δύο παραδοτέα συνδέονται λειτουργικά: η εφαρμογή του Μέρους Α θα
+φιλοξενούνταν στον κεντρικό Web server του παραρτήματος Ιωαννίνων
+(200.1.60.10). Οι υπάλληλοι από τα άλλα τέσσερα παραρτήματα
+(Θεσσαλονίκη, Αθήνα, Πάτρα, Χανιά) θα είχαν πρόσβαση στην εφαρμογή μέσω
+του WAN δικτύου του Μέρους Β, με τη δυναμική δρομολόγηση OSPF να
+εξασφαλίζει τη μεταφορά των HTTP/SQL πακέτων end-to-end. Έτσι η ίδια
+βάση δεδομένων εξυπηρετεί όλη την επιχείρηση από ένα σημείο, με τις ACL
+του δικτύου να αποτελούν επιπλέον επίπεδο ασφάλειας πέρα από το επίπεδο
+εφαρμογής.</p>
+<hr />
+<h2 id="μέρος-α-διαδικτυακή-εφαρμογή-xampp">3. Μέρος Α — Διαδικτυακή
+Εφαρμογή (XAMPP)</h2>
+<h3 id="σενάριο">3.1 Σενάριο</h3>
+<p>Μικρή επιχείρηση ηλεκτρονικών ειδών χρειάζεται απλό σύστημα
+<strong>διαχείρισης παραγγελιών</strong>: καταχώρηση πελατών, κατάλογος
+προϊόντων με απόθεμα, καταγραφή παραγγελιών με κατάσταση (νέα /
+πληρωμένη / αποσταλμένη / ακυρωμένη), και ανάλυση γραμμών παραγγελίας με
+«παγωμένη» τιμή τη στιγμή της πώλησης.</p>
+<h3 id="αρχιτεκτονική-clientserver-3-tier">3.2 Αρχιτεκτονική
+client–server (3-tier)</h3>
+<svg viewBox="0 0 820 210" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;background:#f5f7fa;border-radius:6px;padding:12px;font-family:&#39;DejaVu Sans&#39;,sans-serif">
+<defs>
+<marker id="arrFM" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#444"/></marker>
+</defs>
+<rect x="215" y="35" width="400" height="115" rx="10" fill="none" stroke="#6a4a00" stroke-width="2" stroke-dasharray="6,4"/>
+<text x="415" y="28" text-anchor="middle" font-size="12" font-style="italic" fill="#6a4a00">Middle
+tier (mod_php SAPI)</text>
+<rect x="20"  y="50" width="170" height="90" rx="8" fill="#e8f0f8" stroke="#1a4f8a" stroke-width="2"/>
+<text x="105" y="85" text-anchor="middle" font-weight="bold" font-size="15">Browser</text>
+<text x="105" y="108" text-anchor="middle" font-size="12">(Chrome)</text>
+<rect x="225" y="50" width="180" height="90" rx="8" fill="#fff3d6" stroke="#a36a0d" stroke-width="2"/>
+<text x="315" y="85" text-anchor="middle" font-weight="bold" font-size="15">Apache</text>
+<text x="315" y="108" text-anchor="middle" font-size="12">(XAMPP)</text>
+<rect x="440" y="50" width="170" height="90" rx="8" fill="#cfe7d1" stroke="#2a7a32" stroke-width="2"/>
+<text x="525" y="85" text-anchor="middle" font-weight="bold" font-size="15">PHP</text>
+<text x="525" y="108" text-anchor="middle" font-size="12">PDO
+driver</text>
+<rect x="645" y="50" width="160" height="90" rx="8" fill="#ece2fb" stroke="#5a2db0" stroke-width="2"/>
+<text x="725" y="85" text-anchor="middle" font-weight="bold" font-size="15">MariaDB</text>
+<text x="725" y="108" text-anchor="middle" font-size="12">papinet</text>
+<path d="M190,82 L225,82"   stroke="#444" stroke-width="2" marker-end="url(#arrFM)"/>
+<text x="207" y="74"  text-anchor="middle" font-size="11" fill="#444">HTTP</text>
+<path d="M225,108 L190,108" stroke="#444" stroke-width="2" marker-end="url(#arrFM)"/>
+<path d="M405,82 L440,82"   stroke="#444" stroke-width="2" marker-end="url(#arrFM)"/>
+<text x="422" y="74"  text-anchor="middle" font-size="11" fill="#444">mod_php</text>
+<path d="M440,108 L405,108" stroke="#444" stroke-width="2" marker-end="url(#arrFM)"/>
+<path d="M610,82 L645,82"   stroke="#444" stroke-width="2" marker-end="url(#arrFM)"/>
+<text x="627" y="74"  text-anchor="middle" font-size="11" fill="#444">SQL</text>
+<path d="M645,108 L610,108" stroke="#444" stroke-width="2" marker-end="url(#arrFM)"/>
+<text x="627" y="124" text-anchor="middle" font-size="11" fill="#444">rows</text>
+<text x="105" y="190" text-anchor="middle" font-size="12" fill="#666">Παρουσίαση
+(HTML/CSS)</text>
+<text x="315" y="190" text-anchor="middle" font-size="12" fill="#666">Web
+server</text>
+<text x="525" y="190" text-anchor="middle" font-size="12" fill="#666">Επιχ.
+λογική (PDO)</text>
+<text x="725" y="190" text-anchor="middle" font-size="12" fill="#666">Αποθήκευση
+(4 πίνακες)</text>
+</svg>
+<p><em>Διαδραστική εκδοχή: <a
+href="https://idpe19389308.github.io/papi-net/final-report/interactive/architecture.html">interactive/architecture.html</a></em></p>
+<p>Η middle tier περιλαμβάνει τον Apache + PHP ως ένα ενιαίο επίπεδο
+(mod_php SAPI), σύμφωνα με την προεπιλεγμένη ρύθμιση του XAMPP. Ο
+φυλλομετρητής στέλνει αίτημα HTTP στον Apache· ο Apache καλεί τον PHP
+interpreter (φορτωμένο ως mod_php module μέσα στη διεργασία του Apache)
+που εκτελεί τη σελίδα και επικοινωνεί με τη βάση μέσω
+<strong>PDO</strong> (PHP Data Objects). Η απάντηση γυρίζει σε HTML/CSS
+πίσω στον browser.</p>
+<h3 id="δομή-er-και-πίνακες">3.3 Δομή ER και πίνακες</h3>
+<blockquote>
+<p>📊 <strong>Διάγραμμα ER</strong>: <a
+href="https://idpe19389308.github.io/papi-net/final-report/interactive/er.html">διαδραστική
+εκδοχή με click-to-explore</a></p>
+</blockquote>
+<p>Τέσσερις πίνακες σε MariaDB / InnoDB, character set
+<code>utf8mb4</code> με συλλογή (collation)
+<code>utf8mb4_unicode_ci</code> για ελληνικά:</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Πίνακας</th>
+<th>Σκοπός</th>
+<th>Βασικά πεδία</th>
+<th>Σχέσεις</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>clients</code></td>
+<td>Αγοραστές</td>
+<td>id, fullname, email, phone, city</td>
+<td>1—Ν προς <code>orders</code></td>
+</tr>
+<tr class="even">
+<td><code>products</code></td>
+<td>Κατάλογος</td>
+<td>id, sku (UNIQUE), name, price, stock</td>
+<td>1—Ν προς <code>order_items</code></td>
+</tr>
+<tr class="odd">
+<td><code>orders</code></td>
+<td>Κεφαλίδα παραγγελίας</td>
+<td>id, client_id (FK), order_date, status (ENUM)</td>
+<td>Ν—1 με <code>clients</code> (CASCADE), 1—Ν με
+<code>order_items</code></td>
+</tr>
+<tr class="even">
+<td><code>order_items</code></td>
+<td>Γραμμές παραγγελίας</td>
+<td>id, order_id (FK), product_id (FK), qty, unit_price</td>
+<td>Ν—1 με <code>orders</code> (CASCADE), Ν—1 με <code>products</code>
+(όχι CASCADE)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Σχεδιαστικές επιλογές</strong>: το <code>unit_price</code>
+αποθηκεύεται ως <strong>snapshot</strong> της τιμής τη στιγμή της
+παραγγελίας — αν αύριο αλλάξει η τιμή του προϊόντος, οι παλιές
+παραγγελίες δεν αλλοιώνονται. Η διαγραφή πελάτη παρασύρει τις
+παραγγελίες του (CASCADE), αλλά η διαγραφή προϊόντος
+<strong>εμποδίζεται</strong> όσο υπάρχει σε ιστορικές παραγγελίες —
+διατήρηση ιστορικού.</p>
+<h3 id="επτά-δυναμικές-σελίδες">3.4 Επτά δυναμικές σελίδες</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>#</th>
+<th>Αρχείο</th>
+<th>Λειτουργία</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td><a href="../webapp/public/index.php"><code>index.php</code></a></td>
+<td>Πίνακας ελέγχου (dashboard): πλήθη πελατών / προϊόντων /
+παραγγελιών, τελευταίες κινήσεις</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td><a
+href="../webapp/public/clients.php"><code>clients.php</code></a></td>
+<td>Λίστα πελατών με αναζήτηση + κουμπί διαγραφής</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td><a
+href="../webapp/public/clients_edit.php"><code>clients_edit.php</code></a></td>
+<td>Φόρμα νέου / επεξεργασίας πελάτη (POST → PDO bind)</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td><a
+href="../webapp/public/products.php"><code>products.php</code></a></td>
+<td>Λίστα προϊόντων (sku, τιμή, απόθεμα)</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td><a
+href="../webapp/public/products_edit.php"><code>products_edit.php</code></a></td>
+<td>Φόρμα νέου / επεξεργασίας προϊόντος</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td><a
+href="../webapp/public/orders.php"><code>orders.php</code></a></td>
+<td>Λίστα παραγγελιών + φόρμα δημιουργίας νέας παραγγελίας με επιλογή
+πελάτη</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td><a
+href="../webapp/public/orders_view.php"><code>orders_view.php</code></a></td>
+<td>Λεπτομέρειες παραγγελίας: γραμμές προϊόντων, σύνολο, αλλαγή
+κατάστασης</td>
+</tr>
+</tbody>
+</table>
+<p>Κοινό header/footer/nav από <code>webapp/includes/</code>. Στυλ από
+<a
+href="../webapp/public/assets/style.css"><code>assets/style.css</code></a>
+(καμία εξωτερική εξάρτηση).</p>
+<h3 id="βήματα-ανάπτυξης-ασφάλεια">3.5 Βήματα ανάπτυξης + ασφάλεια</h3>
+<ol type="1">
+<li>Εγκατάσταση <strong>XAMPP</strong>, εκκίνηση Apache +
+MySQL/MariaDB.</li>
+<li>phpMyAdmin → Import <a
+href="../webapp/sql/schema.sql"><code>webapp/sql/schema.sql</code></a>
+(δημιουργεί τη βάση <code>papinet</code> και τους 4 πίνακες) και κατόπιν
+<a href="../webapp/sql/seed.sql"><code>webapp/sql/seed.sql</code></a> (5
+πελάτες, 8 προϊόντα, 5 παραγγελίες, 12 γραμμές).</li>
+<li>Αντιγραφή του φακέλου <code>webapp/public/</code> και
+<code>webapp/includes/</code> στο <code>htdocs/papinet/</code> του
+XAMPP.</li>
+<li>Πλοήγηση σε <code>http://localhost/papinet/</code>.</li>
+</ol>
+<p><strong>Ασφάλεια</strong>: - <strong>PDO με prepared
+statements</strong> σε όλα τα queries → αποτρέπει SQL injection. -
+<code>htmlspecialchars()</code> σε κάθε output → αποτρέπει XSS. - ENUM
+whitelist στο πεδίο <code>status</code> → εμποδίζει αυθαίρετες τιμές. -
+UTF-8 headers ρητά
+(<code>Content-Type: text/html; charset=utf-8</code>).</p>
+<h3 id="github-repository">3.6 GitHub repository</h3>
+<p>Ο κώδικας έχει δημοσιευτεί σε <strong>δημόσιο</strong> GitHub
+repository στη διεύθυνση: <a
+href="https://github.com/idpe19389308/papi-net"
+class="uri">https://github.com/idpe19389308/papi-net</a>.</p>
+<ul>
+<li><strong>README</strong> στα Ελληνικά (<a
+href="https://idpe19389308.github.io/papi-net/webapp/README.html"><code>webapp/README.md</code></a>)
+στη ρίζα του repo, με: σενάριο, αρχιτεκτονική, οδηγίες εγκατάστασης, ER
+διάγραμμα, στοιχεία συγγραφέα.</li>
+<li><strong>LICENSE</strong> παρόν στη ρίζα — άδεια <strong>MIT</strong>
+(επιτρέπει ελεύθερη χρήση/τροποποίηση με αναφορά).</li>
+<li><strong>Commit history</strong> ορατό από οποιονδήποτε επισκέπτη
+(tab «Commits»), δείχνει την εξέλιξη της υλοποίησης βήμα-βήμα.</li>
+<li><strong>Branches</strong>: η κύρια εργασία στο <code>main</code>·
+επιπλέον branches διαθέσιμα για δοκιμές/βελτιώσεις (tab
+«Branches»).</li>
+<li><strong>Δομή φακέλων</strong>: <code>public/</code> (οι 7 .php
+σελίδες + assets), <code>includes/</code> (κοινό header/footer/db.php),
+<code>sql/</code> (schema.sql + seed.sql), <code>docs/</code>
+(τεκμηρίωση).</li>
+</ul>
+<h3 id="δήλωση-χρήσης-εργαλείων-τεχνητής-νοημοσύνης">3.7 Δήλωση χρήσης
+εργαλείων Τεχνητής Νοημοσύνης</h3>
+<p>Όπως ζητάει η εκφώνηση, αναφέρω παρακάτω τη χρήση εργαλείων Τεχνητής
+Νοημοσύνης κατά την υλοποίηση της εργασίας.</p>
+<p>Για το κείμενο της αναφοράς χρησιμοποίησα κυρίως το ChatGPT για
+ορθογραφικό έλεγχο, για αναδιατυπώσεις σε προτάσεις, και κάποιες φορές
+για να μου δώσει μια ιδέα για το πώς να δομήσω καλύτερα μια ενότητα.</p>
+<p>Για τις δυναμικές σελίδες της εφαρμογής (Μέρος Α) χρησιμοποίησα τον
+Claude (Anthropic). Για παραδειγματα κώδικα PHP/PDO. Στη συνέχεια
+διάβαζα τον κώδικα γραμμή προς γραμμή, τον τροποποιούσα όπου ήθελα
+διαφορετική λογική ή UI, και τον δοκίμαζα τοπικά πάνω σε XAMPP.</p>
+<p>Για τις διαμορφώσεις του δικτύου (Μέρος Β) χρησιμοποίησα επίσης τον
+Claude. Για τις καταλληλες εντολες Cisco IOS (VLAN configuration, dot1Q
+subinterfaces, router ospf, access-lists, εφαρμογή ACL inbound στις
+subinterfaces). Δοκίμασα τα configs μέσα στο Packet Tracer, εντόπισα
+κάποια λάθη αντιστοίχισης IP που δεν ταίριαζαν με το PDF της εκφώνησης
+(συγκεκριμένα στο WAN link R-CHA ↔︎ R-PAT) και τα διόρθωσα.</p>
+<p>Όλος ο κώδικας και όλα τα configs δοκιμάστηκαν από εμένα στο τοπικό
+μου περιβάλλον πριν την παράδοση.</p>
+<hr />
+<h2 id="μέρος-β-δικτυακή-τοπολογία-cisco-packet-tracer">4. Μέρος Β —
+Δικτυακή Τοπολογία (Cisco Packet Tracer)</h2>
+<h3 id="εικόνα-τοπολογίας">4.1 Εικόνα τοπολογίας</h3>
+<p>Πέντε παραρτήματα συνδέονται με δακτύλιο WAN links.</p>
+<figure>
+<img src="img/topology.png" alt="Τοπολογία WAN ring — 5 παραρτήματα" />
+<figcaption aria-hidden="true">Τοπολογία WAN ring — 5
+παραρτήματα</figcaption>
+</figure>
+<p><em>Διαδραστική εκδοχή: <a
+href="https://idpe19389308.github.io/papi-net/final-report/interactive/topology.html">interactive/topology.html</a></em></p>
+<h3 id="πίνακας-10-υποδικτύων-5-lan-24-5-wan-30">4.2 Πίνακας 10
+υποδικτύων (5 LAN /24 + 5 WAN /30)</h3>
+<table>
+<thead>
+<tr class="header">
+<th>#</th>
+<th>Υποδίκτυο</th>
+<th>Μάσκα</th>
+<th>Ρόλος</th>
+<th>Πλήθος hosts</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>200.1.10.0</td>
+<td>/24</td>
+<td>LAN Χανίων</td>
+<td>254</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>200.1.20.0</td>
+<td>/30</td>
+<td>WAN ATH↔︎CHA</td>
+<td>2</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>200.1.30.0</td>
+<td>/30</td>
+<td>WAN PAT↔︎CHA</td>
+<td>2</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>200.1.40.0</td>
+<td>/24</td>
+<td>LAN Πατρών</td>
+<td>254</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>200.1.50.0</td>
+<td>/30</td>
+<td>WAN IOA↔︎PAT</td>
+<td>2</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td>200.1.60.0</td>
+<td>/24</td>
+<td>LAN Ιωαννίνων (Web + File server)</td>
+<td>254</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td>200.1.70.0</td>
+<td>/30</td>
+<td>WAN IOA↔︎THE</td>
+<td>2</td>
+</tr>
+<tr class="even">
+<td>8</td>
+<td>200.1.80.0</td>
+<td>/24</td>
+<td>LAN Θεσσαλονίκης</td>
+<td>254</td>
+</tr>
+<tr class="odd">
+<td>9</td>
+<td>200.1.90.0</td>
+<td>/30</td>
+<td>WAN THE↔︎ATH</td>
+<td>2</td>
+</tr>
+<tr class="even">
+<td>10</td>
+<td>200.1.100.0</td>
+<td>/24</td>
+<td>LAN Αθήνας</td>
+<td>254</td>
+</tr>
+</tbody>
+</table>
+<h3 id="vlan-scheme-3-vlans-ανά-παράρτημα-26-σχέδιο">4.3 VLAN scheme — 3
+VLANs ανά παράρτημα → /26 σχέδιο</h3>
+<p>Κάθε LAN /24 χωρίζεται σε <strong>3 χρήσιμα /26
+υπο-υποδίκτυα</strong> (το 4ο /26 παραμένει εφεδρικό):</p>
+<table>
+<thead>
+<tr class="header">
+<th>VLAN ID</th>
+<th>Τμήμα</th>
+<th>Offset</th>
+<th>Παράδειγμα (Θεσσαλονίκη)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>10</td>
+<td>Λογιστήριο</td>
+<td>.0/26</td>
+<td>200.1.80.0/26 (.1–.62)</td>
+</tr>
+<tr class="even">
+<td>20</td>
+<td>Διεύθυνση</td>
+<td>.64/26</td>
+<td>200.1.80.64/26 (.65–.126)</td>
+</tr>
+<tr class="odd">
+<td>30</td>
+<td>Software Developers</td>
+<td>.128/26</td>
+<td>200.1.80.128/26 (.129–.190)</td>
+</tr>
+<tr class="even">
+<td>—</td>
+<td>Εφεδρικό / future use</td>
+<td>.192/26</td>
+<td>200.1.80.192/26</td>
+</tr>
+</tbody>
+</table>
+<h3 id="πίνακας-vlan-ids-ανά-παράρτημα">4.4 Πίνακας VLAN IDs ανά
+παράρτημα</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Παράρτημα</th>
+<th>VLAN 10 (Λογιστήριο)</th>
+<th>VLAN 20 (Διεύθυνση)</th>
+<th>VLAN 30 (Software Developers)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Χανιά</td>
+<td>200.1.10.0/26</td>
+<td>200.1.10.64/26</td>
+<td>200.1.10.128/26</td>
+</tr>
+<tr class="even">
+<td>Πάτρα</td>
+<td>200.1.40.0/26</td>
+<td>200.1.40.64/26</td>
+<td>200.1.40.128/26</td>
+</tr>
+<tr class="odd">
+<td>Ιωάννινα</td>
+<td>200.1.60.0/26</td>
+<td>200.1.60.64/26</td>
+<td>200.1.60.128/26</td>
+</tr>
+<tr class="even">
+<td>Θεσσαλονίκη</td>
+<td>200.1.80.0/26</td>
+<td>200.1.80.64/26</td>
+<td>200.1.80.128/26</td>
+</tr>
+<tr class="odd">
+<td>Αθήνα</td>
+<td>200.1.100.0/26</td>
+<td>200.1.100.64/26</td>
+<td>200.1.100.128/26</td>
+</tr>
+</tbody>
+</table>
+<p>(15 LAN /26 σύνολα — 3 VLAN × 5 παραρτήματα.)</p>
+<h3 id="δυναμική-δρομολόγηση-ospf-area-0">4.5 Δυναμική δρομολόγηση —
+OSPF area 0</h3>
+<p>Επιλέχθηκε <strong>OSPF (Open Shortest Path First)</strong> σε ενιαία
+<strong>area 0</strong>:</p>
+<ul>
+<li><strong>Open standard</strong> (RFC 2328) — λειτουργεί σε εξοπλισμό
+κάθε κατασκευαστή, όχι μόνο Cisco.</li>
+<li><strong>Link-state</strong>: κάθε router γνωρίζει την πλήρη
+τοπολογία και υπολογίζει με <strong>Dijkstra (SPF)</strong> τη βέλτιστη
+διαδρομή.</li>
+<li><strong>Cost = ƒ(bandwidth)</strong> — προτιμά γρήγορες γραμμές, όχι
+απλά λίγα hops.</li>
+<li>Σύγκλιση σε δευτερόλεπτα μετά από αλλαγή σύνδεσης.</li>
+</ul>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Πρωτόκολλο</th>
+<th>Είδος</th>
+<th>Όριο hops</th>
+<th>Vendor</th>
+<th>Καταλληλότητα εδώ</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>OSPF</strong></td>
+<td>Link-state</td>
+<td>∞</td>
+<td>Open</td>
+<td>Ιδανικό</td>
+</tr>
+<tr class="even">
+<td>RIP v2</td>
+<td>Distance-vector</td>
+<td>15</td>
+<td>Open</td>
+<td>Περιορισμένο, αργή σύγκλιση</td>
+</tr>
+<tr class="odd">
+<td>EIGRP</td>
+<td>Advanced distance-vector</td>
+<td>100</td>
+<td>Παλαιότερα Cisco-only</td>
+<td>Όχι portable</td>
+</tr>
+</tbody>
+</table>
+<p>Router IDs: <a href="../packet-tracer/configs/R-IOA.txt">R-IOA</a>
+1.1.1.1, <a href="../packet-tracer/configs/R-THE.txt">R-THE</a> 2.2.2.2,
+<a href="../packet-tracer/configs/R-ATH.txt">R-ATH</a> 3.3.3.3, <a
+href="../packet-tracer/configs/R-PAT.txt">R-PAT</a> 4.4.4.4, <a
+href="../packet-tracer/configs/R-CHA.txt">R-CHA</a> 5.5.5.5.</p>
+<h3 id="inter-vlan-routing-router-on-a-stick-dot1q">4.6 Inter-VLAN
+routing — router-on-a-stick (dot1Q)</h3>
+<p>Σε κάθε παράρτημα ο router συνδέεται με <strong>έναν φυσικό
+σύνδεσμο</strong> (<code>GigabitEthernet0/0/0</code>) στο switch και
+δημιουργεί <strong>τρία subinterfaces</strong> με ετικέτες VLAN κατά
+<strong>IEEE 802.1Q</strong>:</p>
+<pre><code>interface GigabitEthernet0/0/0.10
+ encapsulation dot1Q 10
+ ip address 200.1.80.1 255.255.255.192
+!
+interface GigabitEthernet0/0/0.20
+ encapsulation dot1Q 20
+ ip address 200.1.80.65 255.255.255.192
+!
+interface GigabitEthernet0/0/0.30
+ encapsulation dot1Q 30
+ ip address 200.1.80.129 255.255.255.192</code></pre>
+<p>Στον switch η θύρα <code>Fa0/24</code> είναι <strong>trunk</strong>
+με <code>switchport trunk allowed vlan 10,20,30</code>· οι θύρες
+πρόσβασης: <code>Fa0/1</code> → VLAN 10 (Λογιστήριο), <code>Fa0/2</code>
+→ VLAN 20 (Διεύθυνση), <code>Fa0/3</code> → VLAN 30 (Software
+Developers). Στο SW-IOA οι θύρες <code>Fa0/4</code> και
+<code>Fa0/5</code> εξυπηρετούν επιπλέον τους servers (WebServer,
+FileServer) στο VLAN 10.</p>
+<h3 id="acls-περιορισμός-cross-department-traffic-παράδειγμα-r-ath">4.7
+ACLs — περιορισμός cross-department traffic (παράδειγμα <a
+href="../packet-tracer/configs/R-ATH.txt">R-ATH</a>)</h3>
+<p>Για να μπλοκαριστεί π.χ. η επικοινωνία από το Λογιστήριο (VLAN 10)
+προς το Software Developers (VLAN 30) του ίδιου παραρτήματος,
+εφαρμόζεται extended ACL στο εισερχόμενο subinterface:</p>
+<pre><code>access-list 110 deny   ip 200.1.100.0   0.0.0.63  200.1.100.128 0.0.0.63
+access-list 110 permit ip any any
+!
+interface GigabitEthernet0/0/0.10
+ ip access-group 110 in</code></pre>
+<p>Το ίδιο μοτίβο γενικεύεται σε όλα τα παραρτήματα όπου χρειάζεται
+διαχωρισμός.</p>
+<h3 id="λίστα-screenshots-για-το-πακέτο-παράδοσης">4.8 Λίστα screenshots
+για το πακέτο παράδοσης</h3>
+<ol type="1">
+<li>Πλήρης τοπολογία στο PT workspace με ονόματα συσκευών.</li>
+<li><code>show ip interface brief</code> σε <a
+href="../packet-tracer/configs/R-IOA.txt">R-IOA</a> (όλα τα
+subinterfaces up).</li>
+<li><code>show ip ospf neighbor</code> σε <a
+href="../packet-tracer/configs/R-THE.txt">R-THE</a> (2 γείτονες full
+(δακτύλιος — κάθε router έχει ακριβώς 2 WAN interfaces)).</li>
+<li><code>show ip route ospf</code> σε <a
+href="../packet-tracer/configs/R-CHA.txt">R-CHA</a> (όλες οι LAN /26 ως
+O).</li>
+<li><code>show vlan brief</code> σε <a
+href="../packet-tracer/configs/SW-ATH.txt">SW-ATH</a> (10, 20, 30 +
+ports).</li>
+<li><code>show interfaces trunk</code> σε <a
+href="../packet-tracer/configs/SW-PAT.txt">SW-PAT</a> (Fa0/24 trunk,
+allowed 10,20,30).</li>
+<li>Ping επιτυχίας PC@VLAN10-Αθήνας → PC@VLAN10-Χανίων (intra-dept
+inter-site).</li>
+<li>Ping αποτυχίας PC@VLAN10-Αθήνας → PC@VLAN30-Αθήνας (ACL block).</li>
+<li>Επιτυχία ping σε Web server Ιωαννίνων από όλα τα παραρτήματα.</li>
+</ol>
+<h3 id="πρωτόκολλο-δοκιμών-ping-tests">4.9 Πρωτόκολλο δοκιμών — Ping
+tests</h3>
+<p>Το PDF απαιτεί ρητά να φαίνεται <strong>τόσο η επιτυχής επικοινωνία
+ίδιου τμήματος μεταξύ παραρτημάτων όσο και η <em>μη</em> επιτυχής μεταξύ
+διαφορετικών τμημάτων</strong>. Παρακάτω δίνεται πλήρες πρωτόκολλο.</p>
+<h4 id="πίνακας-στατικών-ip-των-pcs">4.9.1 Πίνακας στατικών IP των
+PCs</h4>
+<p>Σε κάθε PC (PT → click → Desktop → IP Configuration) ρύθμισε
+στατικά:</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Παράρτημα</th>
+<th>VLAN</th>
+<th>PC</th>
+<th>IP</th>
+<th>Subnet mask</th>
+<th>Default gateway</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Αθήνα</td>
+<td>10 Λογιστήριο</td>
+<td>PC-ATH-Λογιστήριο</td>
+<td><code>200.1.100.2</code></td>
+<td><code>255.255.255.192</code></td>
+<td><code>200.1.100.1</code></td>
+</tr>
+<tr class="even">
+<td>Αθήνα</td>
+<td>20 Διεύθυνση</td>
+<td>PC-ATH-Διεύθυνση</td>
+<td><code>200.1.100.66</code></td>
+<td><code>255.255.255.192</code></td>
+<td><code>200.1.100.65</code></td>
+</tr>
+<tr class="odd">
+<td>Αθήνα</td>
+<td>30 Developers</td>
+<td>PC-ATH-Developers</td>
+<td><code>200.1.100.130</code></td>
+<td><code>255.255.255.192</code></td>
+<td><code>200.1.100.129</code></td>
+</tr>
+<tr class="even">
+<td>Θεσσαλονίκη</td>
+<td>10 Λογιστήριο</td>
+<td>PC-THE-Λογιστήριο</td>
+<td><code>200.1.80.2</code></td>
+<td><code>255.255.255.192</code></td>
+<td><code>200.1.80.1</code></td>
+</tr>
+<tr class="odd">
+<td>Θεσσαλονίκη</td>
+<td>20 Διεύθυνση</td>
+<td>PC-THE-Διεύθυνση</td>
+<td><code>200.1.80.66</code></td>
+<td><code>255.255.255.192</code></td>
+<td><code>200.1.80.65</code></td>
+</tr>
+<tr class="even">
+<td>Θεσσαλονίκη</td>
+<td>30 Developers</td>
+<td>PC-THE-Developers</td>
+<td><code>200.1.80.130</code></td>
+<td><code>255.255.255.192</code></td>
+<td><code>200.1.80.129</code></td>
+</tr>
+<tr class="odd">
+<td>Ιωάννινα</td>
+<td>10 Λογιστήριο</td>
+<td>PC-IOA-Λογιστήριο</td>
+<td><code>200.1.60.2</code></td>
+<td><code>255.255.255.192</code></td>
+<td><code>200.1.60.1</code></td>
+</tr>
+<tr class="even">
+<td>Ιωάννινα</td>
+<td>20 Διεύθυνση</td>
+<td>PC-IOA-Διεύθυνση</td>
+<td><code>200.1.60.66</code></td>
+<td><code>255.255.255.192</code></td>
+<td><code>200.1.60.65</code></td>
+</tr>
+<tr class="odd">
+<td>Ιωάννινα</td>
+<td>30 Developers</td>
+<td>PC-IOA-Developers</td>
+<td><code>200.1.60.130</code></td>
+<td><code>255.255.255.192</code></td>
+<td><code>200.1.60.129</code></td>
+</tr>
+<tr class="even">
+<td>Πάτρα</td>
+<td>10 Λογιστήριο</td>
+<td>PC-PAT-Λογιστήριο</td>
+<td><code>200.1.40.2</code></td>
+<td><code>255.255.255.192</code></td>
+<td><code>200.1.40.1</code></td>
+</tr>
+<tr class="odd">
+<td>Πάτρα</td>
+<td>20 Διεύθυνση</td>
+<td>PC-PAT-Διεύθυνση</td>
+<td><code>200.1.40.66</code></td>
+<td><code>255.255.255.192</code></td>
+<td><code>200.1.40.65</code></td>
+</tr>
+<tr class="even">
+<td>Πάτρα</td>
+<td>30 Developers</td>
+<td>PC-PAT-Developers</td>
+<td><code>200.1.40.130</code></td>
+<td><code>255.255.255.192</code></td>
+<td><code>200.1.40.129</code></td>
+</tr>
+<tr class="odd">
+<td>Χανιά</td>
+<td>10 Λογιστήριο</td>
+<td>PC-CHA-Λογιστήριο</td>
+<td><code>200.1.10.2</code></td>
+<td><code>255.255.255.192</code></td>
+<td><code>200.1.10.1</code></td>
+</tr>
+<tr class="even">
+<td>Χανιά</td>
+<td>20 Διεύθυνση</td>
+<td>PC-CHA-Διεύθυνση</td>
+<td><code>200.1.10.66</code></td>
+<td><code>255.255.255.192</code></td>
+<td><code>200.1.10.65</code></td>
+</tr>
+<tr class="odd">
+<td>Χανιά</td>
+<td>30 Developers</td>
+<td>PC-CHA-Developers</td>
+<td><code>200.1.10.130</code></td>
+<td><code>255.255.255.192</code></td>
+<td><code>200.1.10.129</code></td>
+</tr>
+</tbody>
+</table>
+<h4
+id="θετικές-δοκιμές-ίδιο-vlan-μεταξύ-παραρτημάτων-πρέπει-να-επιτύχουν">4.9.2
+Θετικές δοκιμές — ίδιο VLAN μεταξύ παραρτημάτων (πρέπει να
+επιτύχουν)</h4>
+<p>Σε κάθε PC ανοίγουμε <strong>Desktop → Command Prompt</strong> και
+δίνουμε:</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>#</th>
+<th>Από PC</th>
+<th>Εντολή</th>
+<th>Αναμενόμενο</th>
+<th>Σκοπός</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>P1</td>
+<td>PC-IOA-Λογιστήριο</td>
+<td><code>ping 200.1.100.2</code></td>
+<td>✅ Reply</td>
+<td>Λογιστήριο: Ιωάννινα → Αθήνα</td>
+</tr>
+<tr class="even">
+<td>P2</td>
+<td>PC-IOA-Λογιστήριο</td>
+<td><code>ping 200.1.80.2</code></td>
+<td>✅ Reply</td>
+<td>Λογιστήριο: Ιωάννινα → Θεσσαλονίκη</td>
+</tr>
+<tr class="odd">
+<td>P3</td>
+<td>PC-THE-Διεύθυνση</td>
+<td><code>ping 200.1.100.66</code></td>
+<td>✅ Reply</td>
+<td>Διεύθυνση: Θεσ/νίκη → Αθήνα</td>
+</tr>
+<tr class="even">
+<td>P4</td>
+<td>PC-THE-Διεύθυνση</td>
+<td><code>ping 200.1.10.66</code></td>
+<td>✅ Reply</td>
+<td>Διεύθυνση: Θεσ/νίκη → Χανιά</td>
+</tr>
+<tr class="odd">
+<td>P5</td>
+<td>PC-PAT-Developers</td>
+<td><code>ping 200.1.60.130</code></td>
+<td>✅ Reply</td>
+<td>Developers: Πάτρα → Ιωάννινα</td>
+</tr>
+<tr class="even">
+<td>P6</td>
+<td>PC-PAT-Developers</td>
+<td><code>ping 200.1.10.130</code></td>
+<td>✅ Reply</td>
+<td>Developers: Πάτρα → Χανιά</td>
+</tr>
+<tr class="odd">
+<td>P7</td>
+<td>PC-ATH-Λογιστήριο</td>
+<td><code>ping 200.1.40.2</code></td>
+<td>✅ Reply</td>
+<td>Λογιστήριο: Αθήνα → Πάτρα</td>
+</tr>
+<tr class="even">
+<td>P8</td>
+<td>PC-CHA-Διεύθυνση</td>
+<td><code>ping 200.1.60.66</code></td>
+<td>✅ Reply</td>
+<td>Διεύθυνση: Χανιά → Ιωάννινα</td>
+</tr>
+</tbody>
+</table>
+<p><em>Πρώτο echo reply μπορεί να αργήσει 1–2 sec (ARP + OSPF lookup).
+Σταθερό από 2ο μήνυμα.</em></p>
+<figure>
+<img src="../packet-tracer/screenshots/07-ping-success-intra-vlan.png"
+alt="P1/P2 — Επιτυχημένο ping intra-VLAN μεταξύ παραρτημάτων (PC-IOA-Λογιστήριο → 200.1.100.2 / 200.1.80.2): τέσσερα Reply, 0% απώλεια" />
+<figcaption aria-hidden="true">P1/P2 — Επιτυχημένο ping intra-VLAN
+μεταξύ παραρτημάτων (PC-IOA-Λογιστήριο → 200.1.100.2 / 200.1.80.2):
+τέσσερα Reply, 0% απώλεια</figcaption>
+</figure>
+<p><em>Εικόνα — Δείγμα επιτυχημένου ping ίδιου VLAN μεταξύ παραρτημάτων
+(P1/P2 της Θετικής λίστας).</em></p>
+<figure>
+<img src="../packet-tracer/screenshots/09-ping-server.png"
+alt="P-server — Επιτυχία ping σε Web server Ιωαννίνων (200.1.60.10) από απομακρυσμένο PC: η εφαρμογή PHP/MariaDB είναι προσβάσιμη μέσω OSPF από όλα τα παραρτήματα" />
+<figcaption aria-hidden="true">P-server — Επιτυχία ping σε Web server
+Ιωαννίνων (200.1.60.10) από απομακρυσμένο PC: η εφαρμογή PHP/MariaDB
+είναι προσβάσιμη μέσω OSPF από όλα τα παραρτήματα</figcaption>
+</figure>
+<p><em>Εικόνα — Επιτυχία ping στον κεντρικό Web server (200.1.60.10) που
+φιλοξενεί το Μέρος Α, αποδεικνύει τη διασύνδεση Α↔︎Β.</em></p>
+<figure>
+<img src="img/screenshot-ping-success.png"
+alt="Δευτερεύον στιγμιότυπο επιτυχίας ping (από final-report/img/) ως εφεδρικό" />
+<figcaption aria-hidden="true">Δευτερεύον στιγμιότυπο επιτυχίας ping
+(από final-report/img/) ως εφεδρικό</figcaption>
+</figure>
+<p><em>Εικόνα — στιγμιότυπο επιτυχίας ping.</em></p>
+<h4 id="αρνητικές-δοκιμές-διαφορετικά-vlans-πρέπει-να-αποτύχουν">4.9.3
+Αρνητικές δοκιμές — διαφορετικά VLANs (πρέπει να αποτύχουν)</h4>
+<p>Οι ACLs <code>110</code>/<code>120</code>/<code>130</code>
+εφαρμοσμένα inbound στα subinterfaces μπλοκάρουν αυτή την κίνηση.</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>#</th>
+<th>Από PC</th>
+<th>Εντολή</th>
+<th>Αναμενόμενο</th>
+<th>Γιατί</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>N1</td>
+<td>PC-IOA-Λογιστήριο</td>
+<td><code>ping 200.1.60.66</code></td>
+<td>❌ Request timed out / Destination unreachable</td>
+<td>Intra-site Λογ→Διε, ACL block</td>
+</tr>
+<tr class="even">
+<td>N2</td>
+<td>PC-IOA-Λογιστήριο</td>
+<td><code>ping 200.1.60.130</code></td>
+<td>❌ Fail</td>
+<td>Intra-site Λογ→Dev, ACL block</td>
+</tr>
+<tr class="odd">
+<td>N3</td>
+<td>PC-IOA-Λογιστήριο</td>
+<td><code>ping 200.1.100.66</code></td>
+<td>❌ Fail</td>
+<td>Cross-site Λογ→Διε</td>
+</tr>
+<tr class="even">
+<td>N4</td>
+<td>PC-THE-Διεύθυνση</td>
+<td><code>ping 200.1.80.2</code></td>
+<td>❌ Fail</td>
+<td>Intra-site Διε→Λογ</td>
+</tr>
+<tr class="odd">
+<td>N5</td>
+<td>PC-THE-Διεύθυνση</td>
+<td><code>ping 200.1.40.130</code></td>
+<td>❌ Fail</td>
+<td>Cross-site Διε→Dev</td>
+</tr>
+<tr class="even">
+<td>N6</td>
+<td>PC-PAT-Developers</td>
+<td><code>ping 200.1.40.66</code></td>
+<td>❌ Fail</td>
+<td>Intra-site Dev→Διε</td>
+</tr>
+</tbody>
+</table>
+<figure>
+<img src="../packet-tracer/screenshots/08-ping-fail-inter-vlan.png"
+alt="N1/N4 — Αποτυχία ping inter-VLAN λόγω ACL block (Request timed out): η ACL 110 inbound στο subinterface απορρίπτει την κίνηση Λογιστήριο→Διεύθυνση/Developers" />
+<figcaption aria-hidden="true">N1/N4 — Αποτυχία ping inter-VLAN λόγω ACL
+block (Request timed out): η ACL 110 inbound στο subinterface απορρίπτει
+την κίνηση Λογιστήριο→Διεύθυνση/Developers</figcaption>
+</figure>
+<p><em>Εικόνα — Δείγμα αποτυχημένου ping διαφορετικών VLAN: τέσσερα
+«Request timed out», 100% απώλεια — το ACL implicit-deny λειτουργεί όπως
+αναμένεται.</em></p>
+<h4 id="έλεγχος-δυναμικής-δρομολόγησης-cli-σε-ρουτερ">4.9.4 Έλεγχος
+δυναμικής δρομολόγησης (CLI σε ρουτερ)</h4>
+<p>Click στον δρομολογητή → <strong>CLI</strong> tab →
+<code>Password: cisco</code> → <code>enable</code> →
+<code>Password: class</code> → στο prompt <code>R-XXX#</code> δώσε:</p>
+<pre><code>show ip ospf neighbor      ! Πρέπει: 2 γείτονες FULL (δακτύλιος)
+show ip route ospf         ! Πρέπει: 12 διαδρομές O σε remote /26 (4 απομακρυσμένα παραρτήματα × 3 VLAN υποδίκτυα ανά παράρτημα)
+show ip interface brief    ! Πρέπει: όλα τα G0/0, G0/0/1, G0/0/2 = up/up
+show running-config | sec router ospf
+                           ! Δείχνει το network statement</code></pre>
+<figure>
+<img src="../packet-tracer/screenshots/03-show-ospf-neighbor.png"
+alt="show ip ospf neighbor — δύο γείτονες σε κατάσταση FULL (αριστερά &amp; δεξιά του δακτυλίου WAN), Dead Time ~30s, αναγνωρισμένα Router IDs" />
+<figcaption aria-hidden="true">show ip ospf neighbor — δύο γείτονες σε
+κατάσταση FULL (αριστερά &amp; δεξιά του δακτυλίου WAN), Dead Time ~30s,
+αναγνωρισμένα Router IDs</figcaption>
+</figure>
+<p><em>Εικόνα — <code>show ip ospf neighbor</code>: 2 γείτονες FULL
+αποδεικνύουν τη σύγκλιση OSPF area 0 στον δακτύλιο.</em></p>
+<figure>
+<img src="../packet-tracer/screenshots/04-show-ip-route-ospf.png"
+alt="show ip route ospf — πίνακας δρομολόγησης με 12 διαδρομές «O» προς απομακρυσμένα /26 (4 παραρτήματα × 3 VLAN), Administrative Distance 110" />
+<figcaption aria-hidden="true">show ip route ospf — πίνακας δρομολόγησης
+με 12 διαδρομές «O» προς απομακρυσμένα /26 (4 παραρτήματα × 3 VLAN),
+Administrative Distance 110</figcaption>
+</figure>
+<p><em>Εικόνα — <code>show ip route ospf</code>: όλα τα remote /26 LANs
+εμφανίζονται ως OSPF routes (O), επιβεβαιώνεται η end-to-end
+διαφάνεια.</em></p>
+<figure>
+<img src="../packet-tracer/screenshots/02-show-ip-int-brief.png"
+alt="show ip interface brief — όλα τα φυσικά και subinterfaces (G0/0/0.10, .20, .30 + WAN) είναι up/up" />
+<figcaption aria-hidden="true">show ip interface brief — όλα τα φυσικά
+και subinterfaces (G0/0/0.10, .20, .30 + WAN) είναι up/up</figcaption>
+</figure>
+<p><em>Εικόνα — <code>show ip interface brief</code>: όλα τα interfaces
+ενεργά (up/up), επιβεβαιώνει σωστή ανάθεση IP.</em></p>
+<h4 id="έλεγχος-vlan-σε-switch">4.9.5 Έλεγχος VLAN σε switch</h4>
+<p>Click σε ένα SW (π.χ. <a
+href="../packet-tracer/configs/SW-THE.txt"><code>SW-THE</code></a>) →
+CLI → <code>enable</code>:</p>
+<pre><code>show vlan brief            ! Πρέπει: VLANs 10/20/30 με ports Fa0/1, Fa0/2, Fa0/3
+show interfaces trunk      ! Πρέπει: Fa0/24 trunk, allowed 10,20,30
+show interfaces Fa0/1 switchport
+                           ! Access mode, VLAN 10</code></pre>
+<figure>
+<img src="../packet-tracer/screenshots/05-show-vlan-brief.png"
+alt="show vlan brief — VLAN 10/20/30 ορισμένα στο switch με τις access ports Fa0/1, Fa0/2, Fa0/3 αντιστοιχισμένες σωστά" />
+<figcaption aria-hidden="true">show vlan brief — VLAN 10/20/30 ορισμένα
+στο switch με τις access ports Fa0/1, Fa0/2, Fa0/3 αντιστοιχισμένες
+σωστά</figcaption>
+</figure>
+<p><em>Εικόνα — <code>show vlan brief</code>: τα 3 VLAN υπάρχουν στο
+switch με τις σωστές access ports.</em></p>
+<figure>
+<img src="../packet-tracer/screenshots/06-show-interfaces-trunk.png"
+alt="show interfaces trunk — Fa0/24 σε λειτουργία trunk με allowed VLANs 10,20,30 ενεργά και in-pruning" />
+<figcaption aria-hidden="true">show interfaces trunk — Fa0/24 σε
+λειτουργία trunk με allowed VLANs 10,20,30 ενεργά και
+in-pruning</figcaption>
+</figure>
+<p><em>Εικόνα — <code>show interfaces trunk</code>: η θύρα Fa0/24 είναι
+trunk και μεταφέρει tagged frames και των τριών VLAN προς τον
+router.</em></p>
+<h4 id="συμπληρωματικά-στιγμιότυπα">4.9.6 Συμπληρωματικά
+στιγμιότυπα</h4>
+<p>Όλα τα στιγμιότυπα οθόνης που υποστηρίζουν το Μέρος Β βρίσκονται στον
+φάκελο <a
+href="../packet-tracer/screenshots/"><code>packet-tracer/screenshots/</code></a>:</p>
+<ol type="1">
+<li><a
+href="../packet-tracer/screenshots/01-topology.png"><code>01-topology.png</code></a>
+— Τοπολογία PT (Logical view) με τις 26 συσκευές</li>
+<li><a
+href="../packet-tracer/screenshots/02-show-ip-int-brief.png"><code>02-show-ip-int-brief.png</code></a>
+— R-IOA: <code>show ip interface brief</code></li>
+<li><a
+href="../packet-tracer/screenshots/03-show-ospf-neighbor.png"><code>03-show-ospf-neighbor.png</code></a>
+— R-THE: <code>show ip ospf neighbor</code> (2 γείτονες FULL)</li>
+<li><a
+href="../packet-tracer/screenshots/04-show-ip-route-ospf.png"><code>04-show-ip-route-ospf.png</code></a>
+— R-CHA: <code>show ip route ospf</code></li>
+<li><a
+href="../packet-tracer/screenshots/05-show-vlan-brief.png"><code>05-show-vlan-brief.png</code></a>
+— SW-ATH: <code>show vlan brief</code></li>
+<li><a
+href="../packet-tracer/screenshots/06-show-interfaces-trunk.png"><code>06-show-interfaces-trunk.png</code></a>
+— SW-PAT: <code>show interfaces trunk</code></li>
+<li><a
+href="../packet-tracer/screenshots/07-ping-success-intra-vlan.png"><code>07-ping-success-intra-vlan.png</code></a>
+— Ping επιτυχίας intra-VLAN</li>
+<li><a
+href="../packet-tracer/screenshots/08-ping-fail-inter-vlan.png"><code>08-ping-fail-inter-vlan.png</code></a>
+— Ping αποτυχίας inter-VLAN (ACL block)</li>
+<li><a
+href="../packet-tracer/screenshots/09-ping-server.png"><code>09-ping-server.png</code></a>
+— Ping προς Web server Ιωαννίνων</li>
+</ol>
+<figure>
+<img src="../packet-tracer/screenshots/01-topology.png"
+alt="Πλήρης τοπολογία Packet Tracer — δακτύλιος 5 routers (R-IOA, R-THE, R-ATH, R-PAT, R-CHA), 5 switches και PCs ανά VLAN" />
+<figcaption aria-hidden="true">Πλήρης τοπολογία Packet Tracer —
+δακτύλιος 5 routers (R-IOA, R-THE, R-ATH, R-PAT, R-CHA), 5 switches και
+PCs ανά VLAN</figcaption>
+</figure>
+<p><em>Εικόνα — Στιγμιότυπο της τοπολογίας στο Packet Tracer (Logical
+view), οι 26 συσκευές με ετικέτες.</em></p>
+<figure>
+<img src="img/screenshot-pt-topology.png"
+alt="Εφεδρικό στιγμιότυπο τοπολογίας από final-report/img/" />
+<figcaption aria-hidden="true">Εφεδρικό στιγμιότυπο τοπολογίας από
+final-report/img/</figcaption>
+</figure>
+<p><em>Εικόνα — στιγμιότυπο τοπολογίας ( μεγαλύτερη ευκρίνεια).</em></p>
+<figure>
+<img src="img/screenshot-ospf-route.png"
+alt="Εφεδρικό στιγμιότυπο OSPF route table" />
+<figcaption aria-hidden="true">Εφεδρικό στιγμιότυπο OSPF route
+table</figcaption>
+</figure>
+<p><em>Εικόνα — στιγμιότυπο <code>show ip route ospf</code> σε
+router.</em></p>
+<hr />
+<h2 id="μέρος-γ-απαντήσεις-θεωρητικών-ερωτημάτων">5. Μέρος Γ —
+Απαντήσεις θεωρητικών ερωτημάτων</h2>
+<h3 id="α-πόσα-υποδίκτυα">(α) Πόσα υποδίκτυα;</h3>
+<ul>
+<li><strong>Χωρίς VLAN</strong>: <strong>10 υποδίκτυα</strong> = 5 LAN
+/24 + 5 WAN /30.</li>
+<li><strong>Με VLAN</strong> (3 ανά παράρτημα): <strong>20
+υποδίκτυα</strong> = 5 WAN /30 + <strong>15 LAN /26</strong> (5
+παραρτήματα × 3 VLAN).</li>
+</ul>
+<h3 id="β-hosts-ανά-παράρτημα">(β) Hosts ανά παράρτημα</h3>
+<ul>
+<li><strong>Πριν τα VLAN</strong> (LAN /24): 2⁸ − 2 = <strong>254
+χρησιμοποιήσιμοι hosts</strong>.</li>
+<li><strong>Μετά τα VLAN</strong> (3 × /26): κάθε /26 έχει 2⁶ − 2 = 62
+hosts → <strong>3 × 62 = 186 χρησιμοποιήσιμοι hosts ανά
+παράρτημα</strong> (το 4ο /26 παραμένει εφεδρικό).</li>
+</ul>
+<h3 id="γ-θεσσαλονίκη-200.1.80.124">(γ) Θεσσαλονίκη —
+<code>200.1.80.1/24</code></h3>
+<p>Μάσκα /24 = <code>255.255.255.0</code> =
+<code>11111111.11111111.11111111.00000000</code>.</p>
+<p><strong>Binary AND</strong> για το network address:</p>
+<pre><code>IP       200.1.80.1   = 11001000.00000001.01010000.00000001
+Mask     255.255.255.0= 11111111.11111111.11111111.00000000
+─────────────────────────────────────────────────────────────
+Network  200.1.80.0   = 11001000.00000001.01010000.00000000</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th>Στοιχείο</th>
+<th>Τιμή</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Διεύθυνση δικτύου</td>
+<td><strong>200.1.80.0</strong></td>
+</tr>
+<tr class="even">
+<td>Διεύθυνση broadcast</td>
+<td><strong>200.1.80.255</strong> (όλα τα bits hosts = 1)</td>
+</tr>
+<tr class="odd">
+<td>Πρώτος χρησιμοποιήσιμος host</td>
+<td>200.1.80.1</td>
+</tr>
+<tr class="even">
+<td>Τελευταίος χρησιμοποιήσιμος host</td>
+<td>200.1.80.254</td>
+</tr>
+<tr class="odd">
+<td>Εύρος hosts</td>
+<td><strong>200.1.80.1 – 200.1.80.254</strong></td>
+</tr>
+<tr class="even">
+<td>Πλήθος χρησιμοποιήσιμων hosts</td>
+<td>254</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="λεξιλόγιο">6. Λεξιλόγιο</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Όρος</th>
+<th>Σύντομη εξήγηση</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>OSPF</strong></td>
+<td>Open Shortest Path First — πρωτόκολλο δρομολόγησης που μαθαίνει όλη
+την τοπολογία και υπολογίζει την καλύτερη διαδρομή με τον αλγόριθμο
+Dijkstra.</td>
+</tr>
+<tr class="even">
+<td><strong>VLAN</strong></td>
+<td>Virtual LAN — λογικός διαχωρισμός ενός φυσικού switch σε πολλά
+ανεξάρτητα δίκτυα.</td>
+</tr>
+<tr class="odd">
+<td><strong>dot1Q (IEEE 802.1Q)</strong></td>
+<td>Πρότυπο που προσθέτει «ετικέτα» VLAN σε κάθε πακέτο Ethernet, ώστε
+να ταξιδεύουν πολλά VLAN μαζί σε ένα trunk.</td>
+</tr>
+<tr class="even">
+<td><strong>ACL</strong></td>
+<td>Access Control List — λίστα κανόνων που επιτρέπει ή απορρίπτει
+πακέτα βάσει IP/πρωτοκόλλου/πόρτας.</td>
+</tr>
+<tr class="odd">
+<td><strong>/24 vs /30</strong></td>
+<td>Μάσκες υποδικτύου: /24 = 256 διευθύνσεις (254 hosts) για LAN· /30 =
+4 διευθύνσεις (2 hosts) ιδανικό για WAN point-to-point.</td>
+</tr>
+<tr class="even">
+<td><strong>PDO</strong></td>
+<td>PHP Data Objects — ασφαλής τρόπος επικοινωνίας του PHP με τη βάση,
+με prepared statements που εξουδετερώνουν SQL injection.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="αναφορές">7. Αναφορές</h2>
+<ol type="1">
+<li>Cisco Systems. <em>OSPF Design Guide</em> (Document ID 7039). <a
+href="https://www.cisco.com/c/en/us/support/docs/ip/open-shortest-path-first-ospf/7039-1.html"
+class="uri">https://www.cisco.com/c/en/us/support/docs/ip/open-shortest-path-first-ospf/7039-1.html</a></li>
+<li>IEEE 802.1Q-2018 — <em>Bridges and Bridged Networks</em>. IEEE Std
+802.1Q-2018.</li>
+<li>PHP Group. <em>PHP Data Objects (PDO) Manual</em>. <a
+href="https://www.php.net/manual/en/book.pdo.php"
+class="uri">https://www.php.net/manual/en/book.pdo.php</a></li>
+<li>MariaDB Foundation. <em>MariaDB Server Documentation</em> (v10.11).
+<a href="https://mariadb.com/kb/"
+class="uri">https://mariadb.com/kb/</a></li>
+</ol>
+<hr />
+<hr />
+<p><em>Τέλος αναφοράς — Ελένη Βασιλική Διαμάντη, Α.Μ. 19389308.</em></p>
+
+  </main>
+  <footer>
+    <a href="#top">↑ επιστροφή στην κορυφή</a> ·
+    <a href="../index.html">πίσω στο κεντρικό index</a>
+  </footer>
+</body>
+</html>

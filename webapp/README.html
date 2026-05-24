@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <title>PAPI-net — Σύστημα Διαχείρισης Παραγγελιών</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body id="top">
+  <nav class="topnav">
+    <a href="../index.html">🏠 Αρχή</a>
+    <a href="../final-report/report.html">📄 Αναφορά</a>
+    <a href="../final-report/interactive/index.html">🌐 Διαγράμματα</a>
+    <a href="../webapp/README.html">📦 Webapp</a>
+    <a href="https://github.com/idpe19389308/papi-net">🐙 GitHub</a>
+    <a href="../packet-tracer/configs/README.html">🔧 Network</a>
+    <span class="breadcrumb">webapp › README.md</span>
+  </nav>
+  <main>
+<h1 id="papi-net-σύστημα-διαχείρισης-παραγγελιών">PAPI-net — Σύστημα
+Διαχείρισης Παραγγελιών</h1>
+<p>Δυναμική web εφαρμογή σε <strong>PHP 8 / MySQL</strong> πάνω σε
+<strong>XAMPP</strong>, στο πλαίσιο της απαλλακτικής εργασίας του
+μαθήματος <strong>«Τεχνολογία Διαδικτύου στην Ψηφιακή
+Βιομηχανία»</strong>. Η εφαρμογή υλοποιεί ένα μικρό σύστημα διαχείρισης
+πελατών, προϊόντων και παραγγελιών (CRUD) με σύνδεση σε σχεσιακή βάση
+δεδομένων.</p>
+<hr />
+<h2 id="σενάριο">1. Σενάριο</h2>
+<p><strong>Σύστημα Διαχείρισης Παραγγελιών</strong> για μικρή εμπορική
+επιχείρηση:</p>
+<ul>
+<li>Ο χρήστης (υπάλληλος) καταχωρεί <strong>πελάτες</strong> και
+<strong>προϊόντα</strong>.</li>
+<li>Δημιουργεί νέα <strong>παραγγελία</strong> για επιλεγμένο
+πελάτη.</li>
+<li>Προσθέτει γραμμές προϊόντων (<strong>order_items</strong>) με
+ποσότητα και τιμή.</li>
+<li>Η εφαρμογή υπολογίζει αυτόματα το σύνολο της παραγγελίας.</li>
+<li>Παρέχεται λίστα/αναζήτηση/επεξεργασία/διαγραφή για κάθε
+οντότητα.</li>
+</ul>
+<p>Ροή: <strong>Πελάτης → Παραγγελία → Γραμμές Παραγγελίας →
+Σύνολο</strong>.</p>
+<hr />
+<h2 id="αρχιτεκτονική">2. Αρχιτεκτονική</h2>
+<p>Κλασική 3-tier αρχιτεκτονική client–server:</p>
+<svg viewBox="0 0 820 220" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;background:#f5f7fa;border-radius:6px;padding:12px;font-family:&#39;DejaVu Sans&#39;,sans-serif">
+<defs>
+<marker id="arrR1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#444"/></marker>
+</defs>
+<rect x="20"  y="50" width="170" height="90" rx="8" fill="#e8f0f8" stroke="#1a4f8a" stroke-width="2"/>
+<text x="105" y="85" text-anchor="middle" font-weight="bold" font-size="15">Browser</text>
+<text x="105" y="108" text-anchor="middle" font-size="12">(HTML /
+JS)</text>
+<rect x="225" y="50" width="180" height="90" rx="8" fill="#fff3d6" stroke="#a36a0d" stroke-width="2"/>
+<text x="315" y="85" text-anchor="middle" font-weight="bold" font-size="15">Apache</text>
+<text x="315" y="108" text-anchor="middle" font-size="12">(XAMPP,
+mod_php)</text>
+<rect x="440" y="50" width="170" height="90" rx="8" fill="#cfe7d1" stroke="#2a7a32" stroke-width="2"/>
+<text x="525" y="85" text-anchor="middle" font-weight="bold" font-size="15">PHP
+8</text>
+<text x="525" y="108" text-anchor="middle" font-size="12">scripts +
+PDO</text>
+<rect x="645" y="50" width="160" height="90" rx="8" fill="#ece2fb" stroke="#5a2db0" stroke-width="2"/>
+<text x="725" y="85" text-anchor="middle" font-weight="bold" font-size="15">MariaDB</text>
+<text x="725" y="108" text-anchor="middle" font-size="12">(papinet)</text>
+<path d="M190,82 L225,82"   stroke="#444" stroke-width="2" marker-end="url(#arrR1)"/>
+<text x="207" y="74"  text-anchor="middle" font-size="11" fill="#444">HTTP</text>
+<path d="M225,108 L190,108" stroke="#444" stroke-width="2" marker-end="url(#arrR1)"/>
+<text x="207" y="124" text-anchor="middle" font-size="11" fill="#444">HTML</text>
+<path d="M405,82 L440,82"   stroke="#444" stroke-width="2" marker-end="url(#arrR1)"/>
+<text x="422" y="74"  text-anchor="middle" font-size="11" fill="#444">mod_php</text>
+<path d="M440,108 L405,108" stroke="#444" stroke-width="2" marker-end="url(#arrR1)"/>
+<path d="M610,82 L645,82"   stroke="#444" stroke-width="2" marker-end="url(#arrR1)"/>
+<text x="627" y="74"  text-anchor="middle" font-size="11" fill="#444">SQL</text>
+<path d="M645,108 L610,108" stroke="#444" stroke-width="2" marker-end="url(#arrR1)"/>
+<text x="627" y="124" text-anchor="middle" font-size="11" fill="#444">rows</text>
+<text x="105" y="170" text-anchor="middle" font-size="12" fill="#666">requests</text>
+<text x="315" y="170" text-anchor="middle" font-size="12" fill="#666">web
+server</text>
+<text x="525" y="170" text-anchor="middle" font-size="12" fill="#666">application</text>
+<text x="725" y="170" text-anchor="middle" font-size="12" fill="#666">database</text>
+</svg>
+<ul>
+<li><strong>Front-end</strong>: HTML5 + CSS + ελάχιστο JavaScript
+(validation).</li>
+<li><strong>Back-end</strong>: PHP 8 με PDO (prepared statements —
+προστασία από SQL injection).</li>
+<li><strong>DB</strong>: MySQL/MariaDB (XAMPP default), UTF-8
+(<code>utf8mb4</code>).</li>
+</ul>
+<hr />
+<h2 id="προαπαιτούμενα">3. Προαπαιτούμενα</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Λογισμικό</th>
+<th>Έκδοση</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>XAMPP</td>
+<td>≥ 8.x (PHP 8.x + Apache 2.4 + MariaDB 10.x)</td>
+</tr>
+<tr class="even">
+<td>Browser</td>
+<td>Chrome / Firefox / Edge (τρέχουσα έκδοση)</td>
+</tr>
+<tr class="odd">
+<td>Λειτουργικό</td>
+<td>Windows / Linux / macOS</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="εγκατάσταση">4. Εγκατάσταση</h2>
+<ol type="1">
+<li><p><strong>Clone</strong> του repository μέσα στον φάκελο
+<code>htdocs</code> του XAMPP:</p>
+<pre class="bash"><code>cd /opt/lampp/htdocs      # ή C:\xampp\htdocs σε Windows
+git clone https://github.com/idpe19389308/papi-net.git papinet</code></pre></li>
+<li><p>Εκκίνηση <strong>Apache</strong> και <strong>MySQL</strong> από
+το XAMPP Control Panel.</p></li>
+<li><p>Άνοιγμα <strong>phpMyAdmin</strong> →
+<code>http://localhost/phpmyadmin</code>.</p></li>
+<li><p>Δημιουργία βάσης <code>papinet</code> (utf8mb4_unicode_ci) και
+import:</p>
+<ul>
+<li><a href="sql/schema.sql"><code>sql/schema.sql</code></a> (πίνακες +
+foreign keys)</li>
+<li><a href="sql/seed.sql"><code>sql/seed.sql</code></a> (αρχικά demo
+δεδομένα)</li>
+</ul></li>
+<li><p>Επεξεργασία <a
+href="includes/config.php"><code>includes/config.php</code></a> αν τα
+MySQL credentials διαφέρουν από τα default (<code>root</code> /
+κενό):</p>
+<pre class="php"><code>define(&#39;DB_HOST&#39;, &#39;localhost&#39;);
+define(&#39;DB_NAME&#39;, &#39;papinet&#39;);
+define(&#39;DB_USER&#39;, &#39;root&#39;);
+define(&#39;DB_PASS&#39;, &#39;&#39;);</code></pre></li>
+<li><p>Άνοιγμα στον browser:</p>
+<pre><code>http://localhost/papinet/public/</code></pre></li>
+</ol>
+<hr />
+<h2 id="δομή-φακέλων">5. Δομή φακέλων</h2>
+<pre><code>papinet/
+├── README.md                ← αυτό το αρχείο
+├── sql/
+│   ├── schema.sql           ← CREATE TABLE
+│   └── seed.sql             ← demo δεδομένα
+├── includes/
+│   ├── config.php           ← DB credentials + PDO connection
+│   ├── header.php           ← κοινό header (navbar)
+│   └── footer.php           ← κοινό footer
+├── public/
+│   ├── index.php            ← αρχική / dashboard
+│   ├── clients.php          ← λίστα + CRUD πελατών
+│   ├── products.php         ← λίστα + CRUD προϊόντων
+│   ├── orders.php           ← λίστα παραγγελιών
+│   ├── orders_view.php      ← λεπτομέρειες παραγγελίας + items
+│   └── assets/
+│       └── style.css
+└── docs/
+    └── img/                 ← screenshots για README</code></pre>
+<hr />
+<h2 id="er-διάγραμμα">6. ER διάγραμμα</h2>
+<svg viewBox="0 0 820 560" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;background:#f5f7fa;border-radius:6px;padding:12px;font-family:&#39;DejaVu Sans&#39;,sans-serif">
+<defs>
+<marker id="arrR2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#444"/></marker>
+</defs>
+<rect x="40" y="20" width="240" height="170" rx="8" fill="#e8f0f8" stroke="#1a4f8a" stroke-width="2"/>
+<rect x="40" y="20" width="240" height="28" rx="8" fill="#1a4f8a"/>
+<text x="160" y="40" text-anchor="middle" fill="#fff" font-weight="bold" font-size="15">clients</text>
+<text x="55" y="70" font-size="13"><tspan font-weight="bold">id</tspan>
+PK</text> <text x="55" y="90" font-size="13">fullname</text>
+<text x="55" y="110" font-size="13">email</text>
+<text x="55" y="130" font-size="13">phone</text>
+<text x="55" y="150" font-size="13">city</text>
+<rect x="540" y="20" width="240" height="150" rx="8" fill="#fff3d6" stroke="#a36a0d" stroke-width="2"/>
+<rect x="540" y="20" width="240" height="28" rx="8" fill="#a36a0d"/>
+<text x="660" y="40" text-anchor="middle" fill="#fff" font-weight="bold" font-size="15">products</text>
+<text x="555" y="70" font-size="13"><tspan font-weight="bold">id</tspan>
+PK</text> <text x="555" y="90" font-size="13">name</text>
+<text x="555" y="110" font-size="13">price</text>
+<text x="555" y="130" font-size="13">stock</text>
+<rect x="40" y="240" width="240" height="120" rx="8" fill="#cfe7d1" stroke="#2a7a32" stroke-width="2"/>
+<rect x="40" y="240" width="240" height="28" rx="8" fill="#2a7a32"/>
+<text x="160" y="260" text-anchor="middle" fill="#fff" font-weight="bold" font-size="15">orders</text>
+<text x="55" y="290" font-size="13"><tspan font-weight="bold">id</tspan>
+PK</text> <text x="55" y="310" font-size="13">client_id FK</text>
+<text x="55" y="330" font-size="13">order_date</text>
+<text x="55" y="350" font-size="13">status</text>
+<rect x="290" y="400" width="280" height="140" rx="8" fill="#ece2fb" stroke="#5a2db0" stroke-width="2"/>
+<rect x="290" y="400" width="280" height="28" rx="8" fill="#5a2db0"/>
+<text x="430" y="420" text-anchor="middle" fill="#fff" font-weight="bold" font-size="15">order_items</text>
+<text x="305" y="450" font-size="13"><tspan font-weight="bold">id</tspan>
+PK</text> <text x="305" y="470" font-size="13">order_id FK</text>
+<text x="305" y="490" font-size="13">product_id FK</text>
+<text x="305" y="510" font-size="13">qty</text>
+<text x="305" y="530" font-size="13">unit_price</text>
+<path d="M160,190 L160,235" stroke="#444" stroke-width="2" fill="none" marker-end="url(#arrR2)"/>
+<text x="170" y="215" font-size="12" fill="#1a4f8a">1 — N</text>
+<path d="M250,360 L380,395" stroke="#444" stroke-width="2" fill="none" marker-end="url(#arrR2)"/>
+<text x="265" y="380" font-size="12" fill="#2a7a32">1 — N</text>
+<path d="M620,170 L500,395" stroke="#444" stroke-width="2" stroke-dasharray="4,3" fill="none" marker-end="url(#arrR2)"/>
+<text x="540" y="290" font-size="12" fill="#a36a0d">1 — N</text>
+</svg>
+<p><strong>Σχέσεις</strong>: - <code>clients</code> 1 — N
+<code>orders</code> - <code>orders</code> 1 — N <code>order_items</code>
+- <code>products</code> 1 — N <code>order_items</code></p>
+<hr />
+<h2 id="δυναμικές-σελίδες-7-σελίδες-4">7. Δυναμικές σελίδες (7 σελίδες,
+≥ 4)</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Σελίδα</th>
+<th>Περιγραφή</th>
+<th>CRUD</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="public/index.php"><code>public/index.php</code></a></td>
+<td>Dashboard: σύνολα πελατών, παραγγελιών μήνα, top προϊόν</td>
+<td>R</td>
+</tr>
+<tr class="even">
+<td><a
+href="public/clients.php"><code>public/clients.php</code></a></td>
+<td>Λίστα πελατών + <strong>αναζήτηση</strong> (ονοματεπώνυμο/email) +
+προσθήκη</td>
+<td>C/R</td>
+</tr>
+<tr class="odd">
+<td><a
+href="public/clients_edit.php"><code>public/clients_edit.php</code></a></td>
+<td>Επεξεργασία/διαγραφή στοιχείων πελάτη</td>
+<td>U/D</td>
+</tr>
+<tr class="even">
+<td><a
+href="public/products.php"><code>public/products.php</code></a></td>
+<td>Κατάλογος προϊόντων με τιμές &amp; απόθεμα + προσθήκη</td>
+<td>C/R</td>
+</tr>
+<tr class="odd">
+<td><a
+href="public/products_edit.php"><code>public/products_edit.php</code></a></td>
+<td>Επεξεργασία/διαγραφή προϊόντος</td>
+<td>U/D</td>
+</tr>
+<tr class="even">
+<td><a href="public/orders.php"><code>public/orders.php</code></a></td>
+<td>Λίστα παραγγελιών με <strong>φίλτρο κατάστασης</strong> + δημιουργία
+νέας</td>
+<td>C/R/D</td>
+</tr>
+<tr class="odd">
+<td><code>public/orders_view.php</code></td>
+<td>Λεπτομέρειες παραγγελίας — προσθήκη/αφαίρεση γραμμών</td>
+<td>R/U/D</td>
+</tr>
+</tbody>
+</table>
+<h3 id="λειτουργίες-αναζήτησης-φίλτρου">7.1 Λειτουργίες αναζήτησης &amp;
+φίλτρου</h3>
+<ul>
+<li><strong><code>clients.php</code></strong> — Φόρμα αναζήτησης
+ελεύθερου κειμένου (παράμετρος <code>?q=</code>). Αναζητά
+case-insensitive σε <code>fullname</code> <strong>ή</strong>
+<code>email</code> με PDO prepared statement και wildcards
+<code>%q%</code>. Κενό πεδίο → εμφανίζονται όλοι.</li>
+<li><strong><code>orders.php</code></strong> — Dropdown φίλτρου
+κατάστασης (παράμετρος <code>?status=</code>). Επιλογές: <em>Όλες</em>,
+<em>Νέα</em>, <em>Πληρωμένη</em>, <em>Απεσταλμένη</em>,
+<em>Ακυρωμένη</em>. Τιμή σε whitelist guard (anti-injection)·
+<code>ALL</code> → χωρίς <code>WHERE</code>.</li>
+</ul>
+<hr />
+<h2 id="screenshots">8. Screenshots</h2>
+<blockquote>
+<p>Τα screenshots θα τα προσθέσω η ίδια μετά την τοπική εγκατάσταση.
+Τοποθετούνται στον φάκελο <code>docs/img/</code>.</p>
+</blockquote>
+<p><img src="docs/img/01-dashboard.png" alt="Dashboard" /> <img
+src="docs/img/02-clients.png" alt="Λίστα πελατών" /> <img
+src="docs/img/03-new-order.png" alt="Νέα παραγγελία" /> <img
+src="docs/img/04-order-view.png" alt="Λεπτομέρειες παραγγελίας" /></p>
+<hr />
+<h2 id="άδεια-χρήσης">9. Άδεια χρήσης</h2>
+<p><a href="LICENSE">MIT License</a> — το repository είναι δημόσιο στο
+GitHub.</p>
+<hr />
+<h2 id="δήλωση-εργαλείων-τν">10. Δήλωση εργαλείων ΤΝ</h2>
+<p>Όπως ζητάει η εκφώνηση, αναφέρω παρακάτω τη χρήση εργαλείων Τεχνητής
+Νοημοσύνης κατά την υλοποίηση της εργασίας.</p>
+<p>Για το κείμενο της αναφοράς χρησιμοποίησα κυρίως το ChatGPT για
+ορθογραφικό έλεγχο, για αναδιατυπώσεις σε προτάσεις, και κάποιες φορές
+για να μου δώσει μια ιδέα για το πώς να δομήσω καλύτερα μια ενότητα.</p>
+<p>Για τις δυναμικές σελίδες της εφαρμογής (Μέρος Α) χρησιμοποίησα τον
+Claude (Anthropic). Για παραδειγματα κώδικα PHP/PDO. Στη συνέχεια
+διάβαζα τον κώδικα γραμμή προς γραμμή, τον τροποποιούσα όπου ήθελα
+διαφορετική λογική ή UI, και τον δοκίμαζα τοπικά πάνω σε XAMPP.</p>
+<p>Για τις διαμορφώσεις του δικτύου (Μέρος Β) χρησιμοποίησα επίσης τον
+Claude. Για τις καταλληλες εντολες Cisco IOS (VLAN configuration, dot1Q
+subinterfaces, router ospf, access-lists, εφαρμογή ACL inbound στις
+subinterfaces). Δοκίμασα τα configs μέσα στο Packet Tracer, εντόπισα
+κάποια λάθη αντιστοίχισης IP που δεν ταίριαζαν με το PDF της εκφώνησης
+(συγκεκριμένα στο WAN link R-CHA ↔︎ R-PAT) και τα διόρθωσα.</p>
+<p>Όλος ο κώδικας και όλα τα configs δοκιμάστηκαν από εμένα στο τοπικό
+μου περιβάλλον πριν την παράδοση.</p>
+<hr />
+<h2 id="συγγραφέας">11. Συγγραφέας</h2>
+<ul>
+<li><strong>Σπουδάστρια</strong>: Ελένη Βασιλική Διαμάντη</li>
+<li><strong>Α.Μ.</strong>: 19389308</li>
+<li><strong>Διδάσκων</strong>: Δρ. Μιχάλης Ξευγένης</li>
+<li><strong>Μάθημα</strong>: Τεχνολογία Διαδικτύου στην Ψηφιακή
+Βιομηχανία</li>
+<li><strong>Ακαδημαϊκό έτος</strong>: 2025–2026</li>
+</ul>
+
+  </main>
+  <footer>
+    <a href="#top">↑ Αρχή σελίδας</a> ·
+    <a href="../index.html">πίσω στο κεντρικό index</a>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<title>PAPI-net — Διαδραστικά Διαγράμματα (Ε.Β. Διαμάντη)</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #1a1a2e; color: #e0e0e0;
+  font-family: system-ui, -apple-system, sans-serif;
+  min-height: 100vh; display: flex; flex-direction: column;
+}
+header {
+  background: #0f1629; padding: 20px 32px; border-bottom: 1px solid #2a3a5c;
+}
+header h1 { font-size: 22px; color: #6ec5ff; letter-spacing: 0.02em; }
+header .sub { font-size: 13px; color: #93c5fd; margin-top: 6px; }
+header .meta { font-size: 12px; color: #aab; margin-top: 4px; }
+main {
+  flex: 1; padding: 32px; display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 22px; max-width: 1400px; margin: 0 auto; width: 100%;
+}
+.card {
+  background: #16213e; border: 1px solid #243760; border-radius: 10px;
+  padding: 20px; text-decoration: none; color: inherit;
+  transition: transform .15s, border-color .15s, box-shadow .15s;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.card:hover {
+  transform: translateY(-2px); border-color: #6ec5ff;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.card .badge {
+  display: inline-block; padding: 3px 10px; border-radius: 12px;
+  font-size: 10.5px; font-weight: bold; letter-spacing: 0.06em;
+  width: fit-content;
+}
+.b1 { background: #2980b9; color: white; }
+.b2 { background: #27ae60; color: white; }
+.b3 { background: #f39c12; color: white; }
+.b4 { background: #8e44ad; color: white; }
+.card h2 { font-size: 17px; color: #fff; }
+.card p { font-size: 13px; color: #cbd5e1; line-height: 1.5; }
+.card .stats { font-size: 11px; color: #8aa; margin-top: auto; padding-top: 8px;
+  border-top: 1px dotted #243760; display: flex; gap: 12px; }
+footer {
+  padding: 16px 32px; font-size: 12px; color: #889; text-align: center;
+  border-top: 1px solid #2a3a5c; background: #0f1629;
+}
+footer a { color: #93c5fd; }
+.tip {
+  margin: 16px auto 0; max-width: 1400px; padding: 12px 22px;
+  background: #1c4d2a; color: #fff; font-size: 12.5px;
+  border-radius: 8px; border-left: 4px solid #2a7a32;
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Διαδραστικά Διαγράμματα — Απαλλακτική Εργασία</h1>
+  <div class="sub">Σύστημα Διαχείρισης Παραγγελιών + Δικτυακή Τοπολογία 5 παραρτημάτων</div>
+  <div class="meta">Ελένη Βασιλική Διαμάντη · Α.Μ. 19389308 · Διδάσκων: Δρ. Μιχάλης Ξευγένης</div>
+<div id="papinet-backlink" style="margin-top:8px;"><a href="../../index.html" style="color:#6ec5ff; text-decoration:none;">← Πίσω στο κεντρικό index</a></div></header>
+
+<div class="tip">
+  💡 Σε κάθε διάγραμμα: <b>κάντε κλικ</b> σε router, σύνδεση, πίνακα, ή πεδίο για λεπτομέρειες στο πλαϊνό πάνελ. <b>Σύρετε τον καμβά</b> για μετακίνηση.
+</div>
+
+<main>
+  <a class="card" href="topology.html">
+    <span class="badge b1">ΔΙΚΤΥΟ</span>
+    <h2>Δικτυακή Τοπολογία</h2>
+    <p>5 παραρτήματα · 5 WAN /30 · 5 LAN /24 · 15 VLAN /26 · OSPF area 0 · 2 servers στα Ιωάννινα. Κάντε κλικ σε router για configuration, σε σύνδεση για /30 endpoints, σε VLAN box για IP plan και switch ports.</p>
+    <div class="stats"><span>32 clickable</span><span>594 LOC</span></div>
+  </a>
+
+  <a class="card" href="vlan.html">
+    <span class="badge b2">VLAN</span>
+    <h2>Σχέδιο VLAN — Subnetting</h2>
+    <p>Πάνω: Θεσσαλονίκη 200.1.80.0/24 → 4 × /26 (VLAN 10/20/30 + εφεδρικό). Κάτω: πίνακας 5 παραρτημάτων × 4 VLANs (20 cells). Κάθε cell δείχνει network, gateway, hosts range, switch ports και subinterface config.</p>
+    <div class="stats"><span>25 clickable</span><span>627 LOC</span></div>
+  </a>
+
+  <a class="card" href="architecture.html">
+    <span class="badge b3">ΕΦΑΡΜΟΓΗ</span>
+    <h2>Αρχιτεκτονική 3-tier</h2>
+    <p>Browser → Apache (XAMPP) → PHP 8 (PDO) → MariaDB · 6 βέλη πρωτοκόλλου (request/response) · banner ασφάλειας (SQL injection, XSS, ENUM whitelist). Κάντε κλικ σε tier ή βέλος για πρωτόκολλο και ρόλο.</p>
+    <div class="stats"><span>11 clickable</span><span>361 LOC</span></div>
+  </a>
+
+  <a class="card" href="er.html">
+    <span class="badge b4">ΒΑΣΗ</span>
+    <h2>ER Διάγραμμα</h2>
+    <p>4 πίνακες (clients, products, orders, order_items) · 3 ξένα κλειδιά με CASCADE/RESTRICT semantics. Click σε header → πίνακας στο σύνολο · click σε πεδίο → τύπος και περιορισμοί · click σε βέλος FK → cardinality και delete rules.</p>
+    <div class="stats"><span>27 clickable</span><span>568 LOC</span></div>
+  </a>
+</main>
+
+<footer>
+  Συμπληρωματικό υλικό της <a href="../report.odt">τελικής αναφοράς (report.odt)</a> και του
+  <a href="https://github.com/idpe19389308/papi-net">GitHub repository</a>. Όλα τα διαγράμματα είναι αυτόνομα HTML — λειτουργούν offline, χωρίς CDN.
+</footer>
+<footer style="background:#0f1629; color:#aab; padding:14px 24px; text-align:center; font-size:13px; border-top:1px solid #1a4f8a;"><a href="../report.html" style="color:#6ec5ff;">📄 Αναφορά</a> · <a href="../../webapp/README.html" style="color:#6ec5ff;">📦 Webapp</a> · <a href="https://github.com/idpe19389308/papi-net" style="color:#6ec5ff;">🐙 GitHub</a> · <a href="../../index.html" style="color:#6ec5ff;">🏠 Κεντρικό index</a></footer></body>
+</html>

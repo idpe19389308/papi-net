@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<title>VLAN Subnetting — PAPI-net</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; background: #1a1a2e; color: #eaeaea;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+  #wrap { display: flex; height: 100vh; width: 100vw; overflow: hidden; }
+  #stage { flex: 1; background: #f5f7fa; position: relative; overflow: hidden; cursor: grab; }
+  #stage.dragging { cursor: grabbing; }
+  #stage svg { display: block; width: 100%; height: 100%; user-select: none; }
+  #panel { width: 320px; flex: 0 0 320px; background: #16213e; padding: 18px 18px 24px;
+    overflow-y: auto; border-left: 1px solid #0f1a30; }
+  #panel h1 { font-size: 14px; letter-spacing: 1.2px; text-transform: uppercase;
+    color: #ffd479; margin: 0 0 10px; }
+  #panel h2 { font-size: 16px; color: #eaeaea; margin: 8px 0 6px; line-height: 1.25; }
+  #panel p  { font-size: 13px; line-height: 1.45; color: #c8d0e0; margin: 6px 0 12px; }
+  #panel table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12.5px; }
+  #panel th, #panel td { text-align: left; padding: 5px 6px; border-bottom: 1px solid #243a5e;
+    color: #d6dde9; vertical-align: top; }
+  #panel th { color: #8fb3ff; font-weight: 600; width: 38%; }
+  #panel .hint { font-size: 11.5px; color: #7a8aa8; margin-top: 18px; line-height: 1.4; }
+  /* SVG node defaults */
+  .node { cursor: pointer; transition: filter .12s ease, stroke-width .12s ease; }
+  .node:hover { filter: brightness(1.08); }
+  .node.selected { stroke: #ffd479 !important; stroke-width: 4 !important; }
+  .arrow { stroke: #555; stroke-width: 1.5; fill: none; }
+  .nt { font: 600 13px sans-serif; fill: #fff; pointer-events: none; }
+  .ns { font: 11px sans-serif;       fill: #f5f7fa; pointer-events: none; }
+  .at { font: 600 14px sans-serif;   fill: #2c3e50; pointer-events: none; }
+  .axis { font: 11px sans-serif; fill: #6b7a90; pointer-events: none; }
+</style>
+</head>
+<body>
+<nav class="topnav" style="padding:8px 24px;background:#f7f9fc;border-bottom:1px solid #ccc;font-size:13px;display:flex;gap:18px;">
+  <a href="index.html" style="color:#1a4f8a;text-decoration:none;">⬅ Interactive Diagrams</a>
+  <a href="../report.html" style="color:#1a4f8a;text-decoration:none;">📄 Αναφορά</a>
+  <a href="https://github.com/idpe19389308/papi-net" style="color:#1a4f8a;text-decoration:none;">🐙 GitHub</a>
+</nav>
+<div id="wrap">
+  <div id="stage">
+    <svg id="svg" viewBox="0 0 1400 810" preserveAspectRatio="xMidYMid meet">
+      <g id="world">
+        <!-- ===== TITLES ===== -->
+        <text class="at" x="700" y="28" text-anchor="middle" font-size="16">
+          Σχέδιο Υπο-υποδικτύωσης VLAN ανά Υποκατάστημα
+        </text>
+        <text class="axis" x="700" y="46" text-anchor="middle">
+          Πάνω: παράδειγμα Θεσσαλονίκης (200.1.80.0/24 → 4×/26).  Κάτω: πίνακας και των 5 υποκαταστημάτων.
+        </text>
+
+        <!-- ===== ARROWS (drawn BEFORE nodes) ===== -->
+        <!-- parent (cx=700, bottom y=150) to each child top center -->
+        <line class="arrow" x1="700" y1="150" x2="225"  y2="200"/>
+        <line class="arrow" x1="700" y1="150" x2="540"  y2="200"/>
+        <line class="arrow" x1="700" y1="150" x2="860"  y2="200"/>
+        <line class="arrow" x1="700" y1="150" x2="1175" y2="200"/>
+
+        <!-- ===== TOP HALF: parent /24 + 4 children ===== -->
+        <!-- Parent /24 -->
+        <rect class="node" data-key="PARENT-THE"
+              x="120" y="70" width="1160" height="80" rx="10"
+              fill="#2980b9" stroke="#1a5276" stroke-width="2"/>
+        <text class="nt" x="700" y="100" text-anchor="middle" font-size="16">
+          Γονικό LAN Θεσσαλονίκης
+        </text>
+        <text class="ns" x="700" y="122" text-anchor="middle" font-size="13">
+          200.1.80.0/24  ·  mask 255.255.255.0  ·  254 hosts
+        </text>
+        <text class="ns" x="700" y="140" text-anchor="middle" font-size="11">
+          (διαιρείται σε 4 ίσα τμήματα των 64 διευθύνσεων)
+        </text>
+
+        <!-- Child VLAN 10 -->
+        <rect class="node" data-key="VLAN-THE-10"
+              x="130"  y="200" width="210" height="120" rx="10"
+              fill="#27ae60" stroke="#1e8449" stroke-width="2"/>
+        <text class="nt" x="235" y="230" text-anchor="middle">VLAN 10 · Λογιστήριο</text>
+        <text class="ns" x="235" y="252" text-anchor="middle">200.1.80.0/26</text>
+        <text class="ns" x="235" y="270" text-anchor="middle">GW 200.1.80.1</text>
+        <text class="ns" x="235" y="288" text-anchor="middle">Hosts .1 – .62 (62)</text>
+        <text class="ns" x="235" y="306" text-anchor="middle">Switch Fa0/1 access (Fa0/24 trunk)</text>
+
+        <!-- Child VLAN 20 -->
+        <rect class="node" data-key="VLAN-THE-20"
+              x="450"  y="200" width="210" height="120" rx="10"
+              fill="#f39c12" stroke="#ca6f1e" stroke-width="2"/>
+        <text class="nt" x="555" y="230" text-anchor="middle">VLAN 20 · Διεύθυνση</text>
+        <text class="ns" x="555" y="252" text-anchor="middle">200.1.80.64/26</text>
+        <text class="ns" x="555" y="270" text-anchor="middle">GW 200.1.80.65</text>
+        <text class="ns" x="555" y="288" text-anchor="middle">Hosts .65 – .126 (62)</text>
+        <text class="ns" x="555" y="306" text-anchor="middle">Switch Fa0/2 access (Fa0/24 trunk)</text>
+
+        <!-- Child VLAN 30 -->
+        <rect class="node" data-key="VLAN-THE-30"
+              x="770"  y="200" width="210" height="120" rx="10"
+              fill="#8e44ad" stroke="#6c3483" stroke-width="2"/>
+        <text class="nt" x="875" y="230" text-anchor="middle">VLAN 30 · SW Devs</text>
+        <text class="ns" x="875" y="252" text-anchor="middle">200.1.80.128/26</text>
+        <text class="ns" x="875" y="270" text-anchor="middle">GW 200.1.80.129</text>
+        <text class="ns" x="875" y="288" text-anchor="middle">Hosts .129 – .190 (62)</text>
+        <text class="ns" x="875" y="306" text-anchor="middle">Switch Fa0/3 access (Fa0/24 trunk)</text>
+
+        <!-- Child Reserved -->
+        <rect class="node" data-key="RES-THE"
+              x="1090" y="200" width="190" height="120" rx="10"
+              fill="#95a5a6" stroke="#7f8c8d" stroke-width="2"/>
+        <text class="nt" x="1185" y="230" text-anchor="middle">Εφεδρικό /26</text>
+        <text class="ns" x="1185" y="252" text-anchor="middle">200.1.80.192/26</text>
+        <text class="ns" x="1185" y="270" text-anchor="middle">μη ανατεθειμένο</text>
+        <text class="ns" x="1185" y="288" text-anchor="middle">62 hosts διαθέσιμοι</text>
+        <text class="ns" x="1185" y="306" text-anchor="middle">μελλοντική χρήση</text>
+
+        <!-- ===== Separator + bottom heading ===== -->
+        <line x1="60" y1="370" x2="1340" y2="370" stroke="#cfd6e2" stroke-width="1" stroke-dasharray="4,4"/>
+        <text class="at" x="700" y="395" text-anchor="middle" font-size="15">
+          Συγκεντρωτικός πίνακας — 5 υποκαταστήματα × (3 VLAN + 1 εφεδρικό)
+        </text>
+
+        <!-- ===== BOTTOM HALF: 5 columns (branches) × 5 rows (header + 4 cells) ===== -->
+        <!-- Column headers -->
+        <text class="at" x="195"  y="430" text-anchor="middle" font-size="13">Χανιά</text>
+        <text class="axis" x="195" y="446" text-anchor="middle">200.1.10.0/24</text>
+        <text class="at" x="445"  y="430" text-anchor="middle" font-size="13">Πάτρα</text>
+        <text class="axis" x="445" y="446" text-anchor="middle">200.1.40.0/24</text>
+        <text class="at" x="695"  y="430" text-anchor="middle" font-size="13">Ιωάννινα</text>
+        <text class="axis" x="695" y="446" text-anchor="middle">200.1.60.0/24</text>
+        <text class="at" x="945"  y="430" text-anchor="middle" font-size="13">Θεσσαλονίκη</text>
+        <text class="axis" x="945" y="446" text-anchor="middle">200.1.80.0/24</text>
+        <text class="at" x="1195" y="430" text-anchor="middle" font-size="13">Αθήνα</text>
+        <text class="axis" x="1195" y="446" text-anchor="middle">200.1.100.0/24</text>
+
+        <!-- Row labels (left side) -->
+        <text class="at" x="55" y="495" font-size="12" fill="#1e8449">VLAN 10</text>
+        <text class="axis" x="55" y="510" font-size="10">Λογιστήριο</text>
+        <text class="at" x="55" y="565" font-size="12" fill="#ca6f1e">VLAN 20</text>
+        <text class="axis" x="55" y="580" font-size="10">Διεύθυνση</text>
+        <text class="at" x="55" y="635" font-size="12" fill="#6c3483">VLAN 30</text>
+        <text class="axis" x="55" y="650" font-size="10">SW Devs</text>
+        <text class="at" x="55" y="705" font-size="12" fill="#7f8c8d">Εφεδρικό</text>
+        <text class="axis" x="55" y="720" font-size="10">unused /26</text>
+
+        <!-- ROW 1 — VLAN 10 (.0/26) -->
+        <rect class="node" data-key="VLAN-CHA-10" x="120"  y="470" width="150" height="50" rx="6"
+              fill="#27ae60" stroke="#1e8449" stroke-width="2"/>
+        <text class="nt" x="195"  y="492" text-anchor="middle" font-size="12">Χανιά · V10</text>
+        <text class="ns" x="195"  y="510" text-anchor="middle" font-size="11">200.1.10.0/26</text>
+
+        <rect class="node" data-key="VLAN-PAT-10" x="370"  y="470" width="150" height="50" rx="6"
+              fill="#27ae60" stroke="#1e8449" stroke-width="2"/>
+        <text class="nt" x="445"  y="492" text-anchor="middle" font-size="12">Πάτρα · V10</text>
+        <text class="ns" x="445"  y="510" text-anchor="middle" font-size="11">200.1.40.0/26</text>
+
+        <rect class="node" data-key="VLAN-IOA-10" x="620"  y="470" width="150" height="50" rx="6"
+              fill="#27ae60" stroke="#1e8449" stroke-width="2"/>
+        <text class="nt" x="695"  y="492" text-anchor="middle" font-size="12">Ιωάννινα · V10</text>
+        <text class="ns" x="695"  y="510" text-anchor="middle" font-size="11">200.1.60.0/26</text>
+
+        <rect class="node" data-key="VLAN-THE-10-mini" x="870"  y="470" width="150" height="50" rx="6"
+              fill="#27ae60" stroke="#1e8449" stroke-width="2"/>
+        <text class="nt" x="945"  y="492" text-anchor="middle" font-size="12">Θεσσαλονίκη · V10</text>
+        <text class="ns" x="945"  y="510" text-anchor="middle" font-size="11">200.1.80.0/26</text>
+
+        <rect class="node" data-key="VLAN-ATH-10" x="1120" y="470" width="150" height="50" rx="6"
+              fill="#27ae60" stroke="#1e8449" stroke-width="2"/>
+        <text class="nt" x="1195" y="492" text-anchor="middle" font-size="12">Αθήνα · V10</text>
+        <text class="ns" x="1195" y="510" text-anchor="middle" font-size="11">200.1.100.0/26</text>
+
+        <!-- ROW 2 — VLAN 20 (.64/26) -->
+        <rect class="node" data-key="VLAN-CHA-20" x="120"  y="540" width="150" height="50" rx="6"
+              fill="#f39c12" stroke="#ca6f1e" stroke-width="2"/>
+        <text class="nt" x="195"  y="562" text-anchor="middle" font-size="12">Χανιά · V20</text>
+        <text class="ns" x="195"  y="580" text-anchor="middle" font-size="11">200.1.10.64/26</text>
+
+        <rect class="node" data-key="VLAN-PAT-20" x="370"  y="540" width="150" height="50" rx="6"
+              fill="#f39c12" stroke="#ca6f1e" stroke-width="2"/>
+        <text class="nt" x="445"  y="562" text-anchor="middle" font-size="12">Πάτρα · V20</text>
+        <text class="ns" x="445"  y="580" text-anchor="middle" font-size="11">200.1.40.64/26</text>
+
+        <rect class="node" data-key="VLAN-IOA-20" x="620"  y="540" width="150" height="50" rx="6"
+              fill="#f39c12" stroke="#ca6f1e" stroke-width="2"/>
+        <text class="nt" x="695"  y="562" text-anchor="middle" font-size="12">Ιωάννινα · V20</text>
+        <text class="ns" x="695"  y="580" text-anchor="middle" font-size="11">200.1.60.64/26</text>
+
+        <rect class="node" data-key="VLAN-THE-20-mini" x="870"  y="540" width="150" height="50" rx="6"
+              fill="#f39c12" stroke="#ca6f1e" stroke-width="2"/>
+        <text class="nt" x="945"  y="562" text-anchor="middle" font-size="12">Θεσσαλονίκη · V20</text>
+        <text class="ns" x="945"  y="580" text-anchor="middle" font-size="11">200.1.80.64/26</text>
+
+        <rect class="node" data-key="VLAN-ATH-20" x="1120" y="540" width="150" height="50" rx="6"
+              fill="#f39c12" stroke="#ca6f1e" stroke-width="2"/>
+        <text class="nt" x="1195" y="562" text-anchor="middle" font-size="12">Αθήνα · V20</text>
+        <text class="ns" x="1195" y="580" text-anchor="middle" font-size="11">200.1.100.64/26</text>
+
+        <!-- ROW 3 — VLAN 30 (.128/26) -->
+        <rect class="node" data-key="VLAN-CHA-30" x="120"  y="610" width="150" height="50" rx="6"
+              fill="#8e44ad" stroke="#6c3483" stroke-width="2"/>
+        <text class="nt" x="195"  y="632" text-anchor="middle" font-size="12">Χανιά · V30</text>
+        <text class="ns" x="195"  y="650" text-anchor="middle" font-size="11">200.1.10.128/26</text>
+
+        <rect class="node" data-key="VLAN-PAT-30" x="370"  y="610" width="150" height="50" rx="6"
+              fill="#8e44ad" stroke="#6c3483" stroke-width="2"/>
+        <text class="nt" x="445"  y="632" text-anchor="middle" font-size="12">Πάτρα · V30</text>
+        <text class="ns" x="445"  y="650" text-anchor="middle" font-size="11">200.1.40.128/26</text>
+
+        <rect class="node" data-key="VLAN-IOA-30" x="620"  y="610" width="150" height="50" rx="6"
+              fill="#8e44ad" stroke="#6c3483" stroke-width="2"/>
+        <text class="nt" x="695"  y="632" text-anchor="middle" font-size="12">Ιωάννινα · V30</text>
+        <text class="ns" x="695"  y="650" text-anchor="middle" font-size="11">200.1.60.128/26</text>
+
+        <rect class="node" data-key="VLAN-THE-30-mini" x="870"  y="610" width="150" height="50" rx="6"
+              fill="#8e44ad" stroke="#6c3483" stroke-width="2"/>
+        <text class="nt" x="945"  y="632" text-anchor="middle" font-size="12">Θεσσαλονίκη · V30</text>
+        <text class="ns" x="945"  y="650" text-anchor="middle" font-size="11">200.1.80.128/26</text>
+
+        <rect class="node" data-key="VLAN-ATH-30" x="1120" y="610" width="150" height="50" rx="6"
+              fill="#8e44ad" stroke="#6c3483" stroke-width="2"/>
+        <text class="nt" x="1195" y="632" text-anchor="middle" font-size="12">Αθήνα · V30</text>
+        <text class="ns" x="1195" y="650" text-anchor="middle" font-size="11">200.1.100.128/26</text>
+
+        <!-- ROW 4 — Reserved (.192/26) — muted -->
+        <rect class="node" data-key="RES-CHA" x="120"  y="680" width="150" height="50" rx="6"
+              fill="#95a5a6" stroke="#7f8c8d" stroke-width="2" opacity="0.85"/>
+        <text class="nt" x="195"  y="702" text-anchor="middle" font-size="12">Χανιά · res</text>
+        <text class="ns" x="195"  y="720" text-anchor="middle" font-size="11">200.1.10.192/26</text>
+
+        <rect class="node" data-key="RES-PAT" x="370"  y="680" width="150" height="50" rx="6"
+              fill="#95a5a6" stroke="#7f8c8d" stroke-width="2" opacity="0.85"/>
+        <text class="nt" x="445"  y="702" text-anchor="middle" font-size="12">Πάτρα · res</text>
+        <text class="ns" x="445"  y="720" text-anchor="middle" font-size="11">200.1.40.192/26</text>
+
+        <rect class="node" data-key="RES-IOA" x="620"  y="680" width="150" height="50" rx="6"
+              fill="#95a5a6" stroke="#7f8c8d" stroke-width="2" opacity="0.85"/>
+        <text class="nt" x="695"  y="702" text-anchor="middle" font-size="12">Ιωάννινα · res</text>
+        <text class="ns" x="695"  y="720" text-anchor="middle" font-size="11">200.1.60.192/26</text>
+
+        <rect class="node" data-key="RES-THE-mini" x="870"  y="680" width="150" height="50" rx="6"
+              fill="#95a5a6" stroke="#7f8c8d" stroke-width="2" opacity="0.85"/>
+        <text class="nt" x="945"  y="702" text-anchor="middle" font-size="12">Θεσσαλονίκη · res</text>
+        <text class="ns" x="945"  y="720" text-anchor="middle" font-size="11">200.1.80.192/26</text>
+
+        <rect class="node" data-key="RES-ATH" x="1120" y="680" width="150" height="50" rx="6"
+              fill="#95a5a6" stroke="#7f8c8d" stroke-width="2" opacity="0.85"/>
+        <text class="nt" x="1195" y="702" text-anchor="middle" font-size="12">Αθήνα · res</text>
+        <text class="ns" x="1195" y="720" text-anchor="middle" font-size="11">200.1.100.192/26</text>
+
+        <!-- Footer hint -->
+        <text class="axis" x="700" y="775" text-anchor="middle">
+          Σύρετε για μετακίνηση · Κάντε κλικ σε ένα ορθογώνιο για λεπτομέρειες στο πλαϊνό panel
+        </text>
+      </g>
+    </svg>
+  </div>
+
+  <aside id="panel">
+    <h1>Σχέδιο VLAN</h1>
+    <h2 id="p-title">Επιλέξτε ένα υπο-υποδίκτυο</h2>
+    <p id="p-desc">
+      Σχέδιο VLAN: κάθε LAN /24 διαιρείται σε 3 χρησιμοποιήσιμα /26
+      (VLAN 10/20/30) + 1 εφεδρικό. Κάντε κλικ σε κάθε υπο-υποδίκτυο
+      για IP plan, switch ports, και subinterface config.
+    </p>
+    <table id="p-tbl"><tbody></tbody></table>
+    <p class="hint">
+      Κανόνας μάσκας /26 (255.255.255.192): 64 διευθύνσεις ανά μπλοκ,
+      62 χρησιμοποιήσιμα hosts (μείον network &amp; broadcast).
+      Το gateway είναι πάντα η πρώτη χρήσιμη (.1, .65, .129).
+    </p>
+  </aside>
+</div>
+
+<script>
+// =========================================================================
+// DATA — keyed by data-key on each <rect class="node">
+// "*-mini" keys mirror the top-half entries so cells in the bottom table
+// resolve to the same info but with a clarifying note.
+// =========================================================================
+const DATA = {
+
+  // ------- TOP HALF: Θεσσαλονίκη example -------
+  "PARENT-THE": {
+    title: "Γονικό LAN Θεσσαλονίκης — 200.1.80.0/24",
+    desc:  "Το πλήρες LAN /24 του υποκαταστήματος, πριν διαιρεθεί σε /26 ανά τμήμα. " +
+           "Δεν αντιστοιχεί σε φυσικό interface — υπάρχει μόνο εννοιολογικά. " +
+           "Στην πράξη το router-on-a-stick φέρει 3 subinterfaces, ένα ανά VLAN.",
+    props: {
+      "Network":   "200.1.80.0",
+      "Mask":      "255.255.255.0  (/24)",
+      "Διευθύνσεις":"256 συνολικά (254 hosts)",
+      "Broadcast": "200.1.80.255",
+      "Διαίρεση":  "4 × /26 (10, 20, 30, εφεδρικό)"
+    }
+  },
+
+  "VLAN-THE-10": {
+    title: "Θεσσαλονίκη · VLAN 10 — Λογιστήριο",
+    desc:  "Υποδίκτυο του τμήματος Λογιστηρίου. Το trunk προς τον R-THE μεταφέρει το VLAN ως tag 10· " +
+           "ο router το τερματίζει σε subinterface g0/0.10 με encapsulation dot1Q 10.",
+    props: {
+      "Network":      "200.1.80.0/26",
+      "Mask":         "255.255.255.192",
+      "Gateway":      "200.1.80.1",
+      "Hosts":        "200.1.80.1 – .62 (62)",
+      "Broadcast":    "200.1.80.63",
+      "Switch ports": "Fa0/1 access vlan 10 (Fa0/24 trunk)",
+      "Subinterface": "g0/0.10 encapsulation dot1Q 10"
+    }
+  },
+
+  "VLAN-THE-20": {
+    title: "Θεσσαλονίκη · VLAN 20 — Διεύθυνση",
+    desc:  "Υποδίκτυο της διοίκησης / διεύθυνσης. Subinterface g0/0.20 στον R-THE.",
+    props: {
+      "Network":      "200.1.80.64/26",
+      "Mask":         "255.255.255.192",
+      "Gateway":      "200.1.80.65",
+      "Hosts":        "200.1.80.65 – .126 (62)",
+      "Broadcast":    "200.1.80.127",
+      "Switch ports": "Fa0/2 access vlan 20 (Fa0/24 trunk)",
+      "Subinterface": "g0/0.20 encapsulation dot1Q 20"
+    }
+  },
+
+  "VLAN-THE-30": {
+    title: "Θεσσαλονίκη · VLAN 30 — Software Developers",
+    desc:  "Υποδίκτυο της ομάδας ανάπτυξης λογισμικού. Subinterface g0/0.30 στον R-THE.",
+    props: {
+      "Network":      "200.1.80.128/26",
+      "Mask":         "255.255.255.192",
+      "Gateway":      "200.1.80.129",
+      "Hosts":        "200.1.80.129 – .190 (62)",
+      "Broadcast":    "200.1.80.191",
+      "Switch ports": "Fa0/3 access vlan 30 (Fa0/24 trunk)",
+      "Subinterface": "g0/0.30 encapsulation dot1Q 30"
+    }
+  },
+
+  "RES-THE": {
+    title: "Θεσσαλονίκη · Εφεδρικό /26",
+    desc:  "Τέταρτο /26 του γονικού /24, χωρίς αρχική ανάθεση. " +
+           "Διατηρείται ελεύθερο για μελλοντικό τμήμα ή προσωρινό guest VLAN, " +
+           "χωρίς να χρειαστεί νέο διαφημισμένο prefix στο BGP.",
+    props: {
+      "Network":   "200.1.80.192/26",
+      "Mask":      "255.255.255.192",
+      "Hosts":     "62 διαθέσιμοι (όταν χρησιμοποιηθεί)",
+      "Broadcast": "200.1.80.255",
+      "Σκοπός":    "μελλοντική επέκταση / guest VLAN / DMZ-lite"
+    }
+  },
+
+  // ------- BOTTOM TABLE — Χανιά (200.1.10.x) -------
+  "VLAN-CHA-10": {
+    title: "Χανιά · VLAN 10 — Λογιστήριο",
+    desc:  "Subnet Λογιστηρίου υποκαταστήματος Χανίων.",
+    props: {
+      "Network":"200.1.10.0/26","Mask":"255.255.255.192",
+      "Gateway":"200.1.10.1","Hosts":"200.1.10.1 – .62 (62)",
+      "Broadcast":"200.1.10.63","Switch ports":"Fa0/1 access vlan 10 (Fa0/24 trunk)",
+      "Subinterface":"g0/0.10 encapsulation dot1Q 10"
+    }
+  },
+  "VLAN-CHA-20": {
+    title: "Χανιά · VLAN 20 — Διεύθυνση",
+    desc:  "Subnet Διεύθυνσης υποκαταστήματος Χανίων.",
+    props: {
+      "Network":"200.1.10.64/26","Mask":"255.255.255.192",
+      "Gateway":"200.1.10.65","Hosts":"200.1.10.65 – .126 (62)",
+      "Broadcast":"200.1.10.127","Switch ports":"Fa0/2 access vlan 20 (Fa0/24 trunk)",
+      "Subinterface":"g0/0.20 encapsulation dot1Q 20"
+    }
+  },
+  "VLAN-CHA-30": {
+    title: "Χανιά · VLAN 30 — Software Developers",
+    desc:  "Subnet SW Developers υποκαταστήματος Χανίων.",
+    props: {
+      "Network":"200.1.10.128/26","Mask":"255.255.255.192",
+      "Gateway":"200.1.10.129","Hosts":"200.1.10.129 – .190 (62)",
+      "Broadcast":"200.1.10.191","Switch ports":"Fa0/3 access vlan 30 (Fa0/24 trunk)",
+      "Subinterface":"g0/0.30 encapsulation dot1Q 30"
+    }
+  },
+  "RES-CHA": {
+    title: "Χανιά · Εφεδρικό /26",
+    desc:  "Τέταρτο /26 του γονικού 200.1.10.0/24 — αδρανές.",
+    props: {
+      "Network":"200.1.10.192/26","Mask":"255.255.255.192",
+      "Hosts":"62 διαθέσιμοι","Broadcast":"200.1.10.255","Σκοπός":"μελλοντική επέκταση"
+    }
+  },
+
+  // ------- Πάτρα (200.1.40.x) -------
+  "VLAN-PAT-10": {
+    title: "Πάτρα · VLAN 10 — Λογιστήριο",
+    desc:  "Subnet Λογιστηρίου υποκαταστήματος Πατρών.",
+    props: {
+      "Network":"200.1.40.0/26","Mask":"255.255.255.192",
+      "Gateway":"200.1.40.1","Hosts":"200.1.40.1 – .62 (62)",
+      "Broadcast":"200.1.40.63","Switch ports":"Fa0/1 access vlan 10 (Fa0/24 trunk)",
+      "Subinterface":"g0/0.10 encapsulation dot1Q 10"
+    }
+  },
+  "VLAN-PAT-20": {
+    title: "Πάτρα · VLAN 20 — Διεύθυνση",
+    desc:  "Subnet Διεύθυνσης υποκαταστήματος Πατρών.",
+    props: {
+      "Network":"200.1.40.64/26","Mask":"255.255.255.192",
+      "Gateway":"200.1.40.65","Hosts":"200.1.40.65 – .126 (62)",
+      "Broadcast":"200.1.40.127","Switch ports":"Fa0/2 access vlan 20 (Fa0/24 trunk)",
+      "Subinterface":"g0/0.20 encapsulation dot1Q 20"
+    }
+  },
+  "VLAN-PAT-30": {
+    title: "Πάτρα · VLAN 30 — Software Developers",
+    desc:  "Subnet SW Developers υποκαταστήματος Πατρών.",
+    props: {
+      "Network":"200.1.40.128/26","Mask":"255.255.255.192",
+      "Gateway":"200.1.40.129","Hosts":"200.1.40.129 – .190 (62)",
+      "Broadcast":"200.1.40.191","Switch ports":"Fa0/3 access vlan 30 (Fa0/24 trunk)",
+      "Subinterface":"g0/0.30 encapsulation dot1Q 30"
+    }
+  },
+  "RES-PAT": {
+    title: "Πάτρα · Εφεδρικό /26",
+    desc:  "Τέταρτο /26 του γονικού 200.1.40.0/24 — αδρανές.",
+    props: {
+      "Network":"200.1.40.192/26","Mask":"255.255.255.192",
+      "Hosts":"62 διαθέσιμοι","Broadcast":"200.1.40.255","Σκοπός":"μελλοντική επέκταση"
+    }
+  },
+
+  // ------- Ιωάννινα (200.1.60.x) -------
+  "VLAN-IOA-10": {
+    title: "Ιωάννινα · VLAN 10 — Λογιστήριο",
+    desc:  "Subnet Λογιστηρίου υποκαταστήματος Ιωαννίνων.",
+    props: {
+      "Network":"200.1.60.0/26","Mask":"255.255.255.192",
+      "Gateway":"200.1.60.1","Hosts":"200.1.60.1 – .62 (62)",
+      "Broadcast":"200.1.60.63","Switch ports":"Fa0/1 access vlan 10 (Fa0/24 trunk)",
+      "Subinterface":"g0/0.10 encapsulation dot1Q 10"
+    }
+  },
+  "VLAN-IOA-20": {
+    title: "Ιωάννινα · VLAN 20 — Διεύθυνση",
+    desc:  "Subnet Διεύθυνσης υποκαταστήματος Ιωαννίνων.",
+    props: {
+      "Network":"200.1.60.64/26","Mask":"255.255.255.192",
+      "Gateway":"200.1.60.65","Hosts":"200.1.60.65 – .126 (62)",
+      "Broadcast":"200.1.60.127","Switch ports":"Fa0/2 access vlan 20 (Fa0/24 trunk)",
+      "Subinterface":"g0/0.20 encapsulation dot1Q 20"
+    }
+  },
+  "VLAN-IOA-30": {
+    title: "Ιωάννινα · VLAN 30 — Software Developers",
+    desc:  "Subnet SW Developers υποκαταστήματος Ιωαννίνων.",
+    props: {
+      "Network":"200.1.60.128/26","Mask":"255.255.255.192",
+      "Gateway":"200.1.60.129","Hosts":"200.1.60.129 – .190 (62)",
+      "Broadcast":"200.1.60.191","Switch ports":"Fa0/3 access vlan 30 (Fa0/24 trunk)",
+      "Subinterface":"g0/0.30 encapsulation dot1Q 30"
+    }
+  },
+  "RES-IOA": {
+    title: "Ιωάννινα · Εφεδρικό /26",
+    desc:  "Τέταρτο /26 του γονικού 200.1.60.0/24 — αδρανές.",
+    props: {
+      "Network":"200.1.60.192/26","Mask":"255.255.255.192",
+      "Hosts":"62 διαθέσιμοι","Broadcast":"200.1.60.255","Σκοπός":"μελλοντική επέκταση"
+    }
+  },
+
+  // ------- Θεσσαλονίκη mini cells (forward to top entries via note) -------
+  "VLAN-THE-10-mini": {
+    title: "Θεσσαλονίκη · VLAN 10 — Λογιστήριο",
+    desc:  "Ίδιο με το πάνω παράδειγμα — εμφανίζεται και στον συγκεντρωτικό πίνακα.",
+    props: {
+      "Network":"200.1.80.0/26","Mask":"255.255.255.192",
+      "Gateway":"200.1.80.1","Hosts":"200.1.80.1 – .62 (62)",
+      "Broadcast":"200.1.80.63","Switch ports":"Fa0/1 access vlan 10 (Fa0/24 trunk)","Subinterface":"g0/0.10 dot1Q 10"
+    }
+  },
+  "VLAN-THE-20-mini": {
+    title: "Θεσσαλονίκη · VLAN 20 — Διεύθυνση",
+    desc:  "Ίδιο με το πάνω παράδειγμα — εμφανίζεται και στον συγκεντρωτικό πίνακα.",
+    props: {
+      "Network":"200.1.80.64/26","Mask":"255.255.255.192",
+      "Gateway":"200.1.80.65","Hosts":"200.1.80.65 – .126 (62)",
+      "Broadcast":"200.1.80.127","Switch ports":"Fa0/2 access vlan 20 (Fa0/24 trunk)","Subinterface":"g0/0.20 dot1Q 20"
+    }
+  },
+  "VLAN-THE-30-mini": {
+    title: "Θεσσαλονίκη · VLAN 30 — Software Developers",
+    desc:  "Ίδιο με το πάνω παράδειγμα — εμφανίζεται και στον συγκεντρωτικό πίνακα.",
+    props: {
+      "Network":"200.1.80.128/26","Mask":"255.255.255.192",
+      "Gateway":"200.1.80.129","Hosts":"200.1.80.129 – .190 (62)",
+      "Broadcast":"200.1.80.191","Switch ports":"Fa0/3 access vlan 30 (Fa0/24 trunk)","Subinterface":"g0/0.30 dot1Q 30"
+    }
+  },
+  "RES-THE-mini": {
+    title: "Θεσσαλονίκη · Εφεδρικό /26",
+    desc:  "Ίδιο με το πάνω παράδειγμα — εμφανίζεται και στον συγκεντρωτικό πίνακα.",
+    props: {
+      "Network":"200.1.80.192/26","Mask":"255.255.255.192",
+      "Hosts":"62 διαθέσιμοι","Broadcast":"200.1.80.255","Σκοπός":"μελλοντική επέκταση"
+    }
+  },
+
+  // ------- Αθήνα (200.1.100.x) — έδρα — αναφέρεται και η ACL του παραδείγματος -------
+  "VLAN-ATH-10": {
+    title: "Αθήνα · VLAN 10 — Λογιστήριο",
+    desc:  "Subnet Λογιστηρίου της έδρας. Στο σενάριο ACL της εργασίας, ΑΠΑΓΟΡΕΥΕΤΑΙ " +
+           "η αμφίδρομη επικοινωνία με το VLAN 30 της Αθήνας (μέσω access-list 110 στον R-ATH).",
+    props: {
+      "Network":"200.1.100.0/26","Mask":"255.255.255.192",
+      "Gateway":"200.1.100.1","Hosts":"200.1.100.1 – .62 (62)",
+      "Broadcast":"200.1.100.63","Switch ports":"Fa0/1 access vlan 10 (Fa0/24 trunk)",
+      "Subinterface":"g0/0.10 encapsulation dot1Q 10",
+      "ACL":"deny ip 200.1.100.0/26 ↔ 200.1.100.128/26"
+    }
+  },
+  "VLAN-ATH-20": {
+    title: "Αθήνα · VLAN 20 — Διεύθυνση",
+    desc:  "Subnet Διεύθυνσης της έδρας — δεν επηρεάζεται από την ACL Λογ.↔SW.",
+    props: {
+      "Network":"200.1.100.64/26","Mask":"255.255.255.192",
+      "Gateway":"200.1.100.65","Hosts":"200.1.100.65 – .126 (62)",
+      "Broadcast":"200.1.100.127","Switch ports":"Fa0/2 access vlan 20 (Fa0/24 trunk)",
+      "Subinterface":"g0/0.20 encapsulation dot1Q 20"
+    }
+  },
+  "VLAN-ATH-30": {
+    title: "Αθήνα · VLAN 30 — Software Developers",
+    desc:  "Subnet SW Developers της έδρας. Στο σενάριο ACL της εργασίας, " +
+           "ΑΠΑΓΟΡΕΥΕΤΑΙ η αμφίδρομη επικοινωνία με το VLAN 10 της Αθήνας.",
+    props: {
+      "Network":"200.1.100.128/26","Mask":"255.255.255.192",
+      "Gateway":"200.1.100.129","Hosts":"200.1.100.129 – .190 (62)",
+      "Broadcast":"200.1.100.191","Switch ports":"Fa0/3 access vlan 30 (Fa0/24 trunk)",
+      "Subinterface":"g0/0.30 encapsulation dot1Q 30",
+      "ACL":"deny ip 200.1.100.128/26 ↔ 200.1.100.0/26"
+    }
+  },
+  "RES-ATH": {
+    title: "Αθήνα · Εφεδρικό /26",
+    desc:  "Τέταρτο /26 του γονικού 200.1.100.0/24 — αδρανές. Στην έδρα κρατιέται για " +
+           "πιθανό 4ο VLAN (π.χ. server farm, NOC).",
+    props: {
+      "Network":"200.1.100.192/26","Mask":"255.255.255.192",
+      "Hosts":"62 διαθέσιμοι","Broadcast":"200.1.100.255","Σκοπός":"μελλοντική επέκταση / server farm"
+    }
+  }
+};
+
+// =========================================================================
+// PANEL RENDER
+// =========================================================================
+const pTitle = document.getElementById("p-title");
+const pDesc  = document.getElementById("p-desc");
+const pTbl   = document.getElementById("p-tbl").querySelector("tbody");
+
+function showInfo(key){
+  const d = DATA[key];
+  if(!d){ return; }
+  pTitle.textContent = d.title;
+  pDesc.textContent  = d.desc;
+  // rebuild table
+  pTbl.innerHTML = "";
+  Object.entries(d.props || {}).forEach(([k,v]) => {
+    const tr = document.createElement("tr");
+    const th = document.createElement("th"); th.textContent = k;
+    const td = document.createElement("td"); td.textContent = v;
+    tr.appendChild(th); tr.appendChild(td); pTbl.appendChild(tr);
+  });
+}
+
+// =========================================================================
+// CLICK SELECTION
+// =========================================================================
+let selected = null;
+document.querySelectorAll('.node').forEach(n => {
+  n.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (selected) selected.classList.remove('selected');
+    selected = n;
+    n.classList.add('selected');
+    showInfo(n.getAttribute('data-key'));
+  });
+});
+
+// =========================================================================
+// DRAG-TO-PAN  (translate the <g id="world">)
+// =========================================================================
+const stage = document.getElementById('stage');
+const svg   = document.getElementById('svg');
+const world = document.getElementById('world');
+let panX = 0, panY = 0;
+let dragging = false, startX = 0, startY = 0, startPanX = 0, startPanY = 0;
+
+function applyTransform(){
+  world.setAttribute('transform', `translate(${panX} ${panY})`);
+}
+
+stage.addEventListener('mousedown', (e) => {
+  // ignore drag if user clicked a node — that's a select gesture
+  if (e.target.closest('.node')) return;
+  dragging = true;
+  stage.classList.add('dragging');
+  startX = e.clientX; startY = e.clientY;
+  startPanX = panX;   startPanY = panY;
+});
+
+// window-level move + up, so dragging keeps working outside the stage
+window.addEventListener('mousemove', (e) => {
+  if (!dragging) return;
+  // scale screen-pixel delta into viewBox units
+  const rect = svg.getBoundingClientRect();
+  const sx = 1400 / rect.width;
+  const sy = 810  / rect.height;
+  panX = startPanX + (e.clientX - startX) * sx;
+  panY = startPanY + (e.clientY - startY) * sy;
+  applyTransform();
+});
+window.addEventListener('mouseup', () => {
+  dragging = false;
+  stage.classList.remove('dragging');
+});
+</script>
+</body>
+</html>
